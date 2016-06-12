@@ -1,10 +1,20 @@
 (def project 'osmium)
 (def version "0.1.0-SNAPSHOT")
 
-(set-env! :resource-paths #{"resources" "src"}
-          :source-paths   #{"test"}
-          :dependencies   '[[org.clojure/clojure "RELEASE"]
-                            [adzerk/boot-test "RELEASE" :scope "test"]])
+(set-env!
+ :source-paths    #{"resources" "src"}
+ :resource-paths  #{"resources"}
+ :dependencies '[
+                 ;; Server
+                 [com.stuartsierra/component "0.2.3"]
+                 [ring "1.3.2"]
+                 [fogus/ring-edn "0.3.0"]
+                 [compojure "1.4.0"]
+                 [clj-http "1.1.0"]
+                 [hiccup "1.0.5"]
+                 ;; Testing
+                 [org.clojure/test.check "0.9.0"]])
+
 
 (task-options!
  aot {:namespace   #{'osmium.core}}
@@ -12,7 +22,7 @@
       :version     version
       :description "FIXME: write description"
       :url         "http://example/FIXME"
-      :scm         {:url "https://github.com/yourname/osmium"}
+      :scm         {:url "https://github.com/bensu/osmium"}
       :license     {"Eclipse Public License"
                     "http://www.eclipse.org/legal/epl-v10.html"}}
  jar {:main        'osmium.core
@@ -29,5 +39,3 @@
   [a args ARG [str] "the arguments for the application."]
   (require '[osmium.core :as app])
   (apply (resolve 'app/-main) args))
-
-(require '[adzerk.boot-test :refer [test]])
