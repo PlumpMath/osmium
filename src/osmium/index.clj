@@ -13,22 +13,55 @@
     [:body
      [:div {:class "container"} content ]]]))
 
+(def books
+  [{:title "I Am a Strange Loop"
+    :author "Douglas R. Hofstadter"
+    :rating 5}
+   {:title "I Am a Strange Loop"
+    :author "Douglas R. Hofstadter"
+    :rating 5}
+   {:title "I Am a Strange Loop"
+    :author "Douglas R. Hofstadter"
+    :rating 4}
+   {:title "I Am a Strange Loop"
+    :author "Douglas R. Hofstadter"
+    :rating 5}])
+
+(def title-row
+  [:tr
+   [:th.row-left "Title"]
+   [:th "Author"]
+   [:th.center.row-right "Rating"]])
+
+(defn rating-icons [r]
+  (html
+   [:span {}
+    (for [i (range r)]
+      [:i {:class "fa fa-star"}])]))
+
+(defn book-row [book]
+  (html
+   [:tr.session-row {}
+    [:td.row-left (:title book)]
+    [:td.row-left (:author book)]
+    [:td.row-right.center {} (rating-icons (:rating book))]]))
+
+(defn table []
+  (html
+   [:div.main {}
+    [:table.session-table.u-full-width {}
+     [:thead title-row]
+     [:tbody {}
+      (for [book books]
+        (book-row book))]]]))
+
 (defn index []
   (application
    "Osmium"
    (html
     [:div.container {}
      [:div.title-row {}
-      [:div {} [:h2.main-title {} "some title"]]
-      [:div {} [:span.right "Current: "]]]
-     [:div.session {}
-      [:h5.session-title {}  "id"
-       [:i {:class "fa fa-circle "}]
-       [:i.fa.fa-times.u-pull-right.close-session {}]]
-      [:button.playback [:a {:target "_blank"}
-                         "Playback"]]
-      [:button.playback [:a {:href "https://saucelabs.com/beta/manual"
-                             :target "_blank"}
-                         "Sauce Labs"]]
-      [:p {} "App Version: "]
-      [:br]]])))
+      [:div {}
+       [:h2.main-title {} "Osmium"]
+       [:h5 {} [:em {} "Dense books"]]]]
+     (table)])))
