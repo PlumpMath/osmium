@@ -4,6 +4,7 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
+            [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :as params]
             [ring.middleware.edn :refer [wrap-edn-params]]
             [ring.util.response :as response]
@@ -23,6 +24,7 @@
 (def app-handler
   (-> main-routes
       wrap-edn-params
+      wrap-reload
       handler/site))
 
 (defn start-jetty [handler port]
