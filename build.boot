@@ -12,9 +12,11 @@
                  [compojure "1.4.0"]
                  [clj-http "1.1.0"]
                  [hiccup "1.0.5"]
+                 [com.datomic/datomic-free "0.9.5372"]
                  ;; Testing
                  [org.clojure/test.check "0.9.0"]])
 
+(load-data-readers!)
 
 (task-options!
  aot {:namespace   #{'osmium.core}}
