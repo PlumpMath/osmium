@@ -66,14 +66,17 @@
      (rating-icons (:book/rating book))
      [:br]
      (if edit?
-       [:textarea {}
-        (:book/description book)]
-       [:p {}
-        (:book/description book)])
-     [:br]
-     (if edit?
-       [:button {}
-        "Save"]
-       [:button {}
-        [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
-         "Edit"]])])))
+       [:form {:action (format "/book/%s" (:db/id book))
+               :method :post}
+        [:textarea {:name "book/description"}
+         (:book/description book)]
+        [:br]
+        [:button {:type "submit"}
+         "Save"]]
+       [:div {}
+        [:p {}
+         (:book/description book)]
+        [:br]
+        [:button {}
+         [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
+          "Edit"]]])])))

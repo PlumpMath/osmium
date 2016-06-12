@@ -28,6 +28,10 @@
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
        (index/book-view book {:edit? (= "edit" mode)})))
+   (POST "/book/:id" {params :params}
+     (let [description (get params "book/description")]
+       (book/update-description! db (Long. (:id params)) description)
+       (response/redirect (format "/book/%s" (:id params)))))
    (route/resources "/")))
 
 ;; ======================================================================

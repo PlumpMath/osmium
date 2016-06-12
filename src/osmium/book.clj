@@ -15,3 +15,10 @@
 (defn all [db]
   (mapv (comp (partial by-id db) first)
         (d/q '[:find ?b :in $ :where [?b :book/iban _]] (d/db (:conn db)))))
+
+
+;;  ======================================================================
+;; Write
+
+(defn update-description! [db id description]
+  (d/transact (:conn db) [{:db/id id :book/description  description}]))
