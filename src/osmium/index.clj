@@ -40,7 +40,7 @@
 
 (defn rating-icons [r]
   (html
-   [:span {}
+   [:span.rating {}
     (for [i (range r)]
       [:i {:class "fa fa-star"}])]))
 
@@ -89,13 +89,12 @@
    session
    (str "Osmium - " (:book/title book))
    (html
-    [:div {}
+    [:div.book-view {}
      [:h2.main-title {} (:book/title book)]
      [:h5 {} [:em {} (:book/author book)]]
      (if (logged-in? session)
        (rating-icons-form (:db/id book))
        (rating-icons (:book/rating book)))
-     [:br]
      (if edit?
        [:form {:action (format "/book/%s" (:db/id book))
                :method :post}
