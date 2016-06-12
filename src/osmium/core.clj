@@ -39,7 +39,13 @@
    (GET "/login" {session :session}
      (if (index/logged-in? session)
        (response/redirect "/")
-       "login"))
+       (index/log-in session)))
+   (POST "/login" {params :params}
+     (let [user (user/login db (map-keys keyword params))]
+       (if-let [error (:error user)]
+         (pr-str {:error error})
+         (-> (response/redirect "/")
+             (assoc-in [:session :user] user)))))
    (GET "/logout" _
      (-> (response/redirect "/")
          (assoc :session {})))

@@ -17,14 +17,15 @@
     [:body
      [:div {:class "container"} content ]
      [:div.footer
-      (if-let [email (get-in session [:user :user/email])]
-        [:div.container {}
-         [:ul.navbar-list {}
-          [:li.navbar-item {}
-           [:a.navbar-link {:href (format "/user/%s" email)}
-            email]]
-          [:li.navbar-item {}
-           [:a.navbar-link {:href "/logout"} "Log out"]]]]
+      (if (logged-in? session)
+        (let [email (get-in session [:user :user/email])]
+          [:div.container {}
+           [:ul.navbar-list {}
+            [:li.navbar-item {}
+             [:a.navbar-link {:href (format "/user/%s" email)}
+              email]]
+            [:li.navbar-item {}
+             [:a.navbar-link {:href "/logout"} "Log out"]]]])
         [:div.container {}
          [:ul.navbar-list {}
           [:li.navbar-item {}
@@ -114,6 +115,23 @@
 
 ;; ======================================================================
 ;; User View
+
+(defn log-in [session]
+  (layout
+   session
+   (str "Osmium - Log in")
+   (html
+    [:h1 {} "Log in"]
+    [:form {:action "/login" :method :post}
+     [:span
+      [:label {:for "email"} "Email"]
+      [:input {:name "email" :type "email"}]]
+     [:span
+      [:label {:for "password"} "Password"]
+      [:input {:name "password" :type "password"}]]
+     [:br]
+     [:button {:type "submit"}
+      "Log in"]])))
 
 (defn sign-up [session]
   (layout

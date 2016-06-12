@@ -27,4 +27,5 @@
    (map->Datomic {:uri uri})))
 
 (defn ->map [e]
-  (into {:db/id (:db/id e)} e))
+  (when-let [id (:db/id e)]
+    (into {:db/id id} e)))

@@ -33,3 +33,12 @@
       (do
         (d/transact (:conn db) [{:user/email email :user/password new-pass}])
         (by-email db email)))))
+
+(defn login [db {:keys [email password]}]
+  (let [user (by-email db email)]
+    (if-let [error (cond
+                     (nil? user) :user-not-found
+                     (empty? password) :empty-password
+                     (not= (:user/password user) password) :pass-dont-match)]
+      {:error error}
+      user)))
