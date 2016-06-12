@@ -25,3 +25,6 @@
   ([] (new-datomic-db "datomic:mem://localhost:4334/osmium"))
   ([uri]
    (map->Datomic {:uri uri})))
+
+(defn ->map [e]
+  (into {:db/id (:db/id e)} e))
