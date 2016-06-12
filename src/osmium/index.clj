@@ -75,6 +75,15 @@
 ;; ======================================================================
 ;; Book View
 
+(defn rating-icons-form [book-id]
+  (html
+   [:form.rating {:action (format "/book/%s/rate" book-id) :method :post}
+    (for [i (range 5)]
+      [:span {:class "rating-icon"}
+       [:input {:id (str "start-" i) :type "radio" :name "rating" :value i}]
+       [:label {:for (str "start-" i)}
+        [:i {:class "fa fa-star"}]]])]))
+
 (defn book-view [session book {:keys [edit?]}]
   (layout
    session
@@ -83,7 +92,9 @@
     [:div {}
      [:h2.main-title {} (:book/title book)]
      [:h5 {} [:em {} (:book/author book)]]
-     (rating-icons (:book/rating book))
+     (if (logged-in? session)
+       (rating-icons-form (:db/id book))
+       (rating-icons (:book/rating book)))
      [:br]
      (if edit?
        [:form {:action (format "/book/%s" (:db/id book))
