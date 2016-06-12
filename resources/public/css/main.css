@@ -215,10 +215,6 @@ input.session-input.error:focus {
     display: flex;
 }
 
-.title-row > div {
-    width: 50%;
-}
-
 .title-row > div > span {
     line-height: 6;
 }

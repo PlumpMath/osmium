@@ -10,7 +10,7 @@
     [:title title]
     (page/include-css "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css")
     (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
-    (page/include-css "css/main.css")
+    (page/include-css "/css/main.css")
     [:body
      [:div {:class "container"} content ]]]))
 
@@ -61,21 +61,19 @@
    (str "Osmium - " (:book/title book))
    (html
     [:div.container {}
-     [:div.title-row {}
-      [:div {}
-       [:h2.main-title {} (:book/title book)]
-       [:h5 {} [:em {} (:book/author book)]]
-       (rating-icons (:book/rating book))
-       [:br]
-       (if edit?
-         [:textarea {}
-          (:book/description book)]
-         [:p {}
-          (:book/description book)])
-       [:br]
-       (if edit?
-         [:button {}
-          "Save"]
-         [:button {}
-          [:a {:href (format "/book/%s/edit" (:db/id book))}
-           "Edit"]])]]])))
+     [:h2.main-title {} (:book/title book)]
+     [:h5 {} [:em {} (:book/author book)]]
+     (rating-icons (:book/rating book))
+     [:br]
+     (if edit?
+       [:textarea {}
+        (:book/description book)]
+       [:p {}
+        (:book/description book)])
+     [:br]
+     (if edit?
+       [:button {}
+        "Save"]
+       [:button {}
+        [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
+         "Edit"]])])))
