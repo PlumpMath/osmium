@@ -66,6 +66,13 @@
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
        (index/book-view session book {:edit? (= "edit" mode)})))
+   (POST "/book/:id/rate" {params :params session :session}
+     (if (index/logged-in? session)
+       (if-let [rating (:rating (map-keys keyword params))]
+         (do
+           (book/update-rating! db (Long. (:id params)) (Integer. rating))
+           (response/redirect (format "/book/%s" (:id params)))))
+       (response/status (response/response "You can't rate") 401)))
    (POST "/book/:id" {params :params}
      (let [description (get params "book/description")]
        (book/update-description! db (Long. (:id params)) description)

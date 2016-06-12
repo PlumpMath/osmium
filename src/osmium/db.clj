@@ -10,12 +10,13 @@
     (let [read (comp read-string slurp io/resource)
           book-schema (read "db/schemas/book.edn")
           user-schema (read "db/schemas/user.edn")
-          books (mapv #(assoc % :db/id #db/id[:db.part/user])
-                      (read "db/seed/books.edn"))
+          entities (mapv #(assoc % :db/id (d/tempid :db.part/user))
+                         (concat (read "db/seed/books.edn")
+                                 (read "db/seed/users.edn")))
           db (d/create-database uri)
           conn (d/connect uri)]
       @(d/transact conn (concat book-schema user-schema))
-      @(d/transact conn books)
+      @(d/transact conn entities)
       (assoc component :conn conn)))
   (stop [component]
     (when conn (d/release conn))
