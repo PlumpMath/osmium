@@ -8,6 +8,7 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :as params]
             [ring.middleware.edn :refer [wrap-edn-params]]
+            [ring.middleware.session :as session]
             [ring.util.response :as response]
             [ring.adapter.jetty :as jetty]
             [compojure.core :refer :all]
@@ -27,27 +28,35 @@
 
 (defn main-routes [db]
   (routes
-   (GET "/" _ (let [books (book/all db)]
-                (index/index books)))
-   (GET "/user/:email" [email]
-     (if-let [user (user/by-email db email)]
-       (index/user-view user)
-       "user not found"))
-   (GET "/signup" _ (index/sign-up))
+   (GET "/" {session :session}
+     (let [books (book/all db)]
+       (index/index session books)))
+   (GET "/user/:email" req
+     (let [email (get-in req [:params :email])]
+       (if-let [user (user/by-email db email)]
+         (index/user-view (:session req) user)
+         "user not found")))
+   (GET "/login" {session :session}
+     (if (index/logged-in? session)
+       (response/redirect "/")
+       "login"))
+   (GET "/signup" {session :session} (index/sign-up session))
    (POST "/signup" {params :params}
      (let [new-user (user/signup! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
          (pr-str error)
-         (response/redirect (format "/user/%s" (:user/email new-user))))))
+         (-> (format "/user/%s" (:user/email new-user))
+             response/redirect
+             (assoc :session {:user new-user})))))
    (POST "/update-pass" {params :params}
      (let [new-user (user/update-password! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
          (pr-str error)
          (response/redirect (format "/user/%s" (:user/email new-user))))))
-   (GET "/book/:id" {params :params}
+   (GET "/book/:id" {params :params session :session}
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
-       (index/book-view book {:edit? (= "edit" mode)})))
+       (index/book-view session book {:edit? (= "edit" mode)})))
    (POST "/book/:id" {params :params}
      (let [description (get params "book/description")]
        (book/update-description! db (Long. (:id params)) description)
@@ -59,9 +68,9 @@
 
 (defn app-handler [db]
   (-> (main-routes db)
+      session/wrap-session
       wrap-edn-params
       params/wrap-params
-      wrap-reload
       prone/wrap-exceptions))
 
 (defn start-jetty [handler port]

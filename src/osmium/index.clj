@@ -3,7 +3,10 @@
             [hiccup.page :as page]
             [osmium.book :as book]))
 
-(defn layout [title & content]
+(defn logged-in? [session]
+  (not (empty? (:user session))))
+
+(defn layout [session title & content]
   (page/html5
    {:lang "en"}
    [:head
@@ -12,7 +15,20 @@
     (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
     (page/include-css "/css/main.css")
     [:body
-     [:div {:class "container"} content ]]]))
+     [:div {:class "container"} content ]
+     [:div.footer
+      (if-let [email (get-in session [:user :user/email])]
+        [:div.container {}
+         [:ul.navbar-list {}
+          [:li.navbar-item {}
+           [:a.navbar-link {:href (format "user/%s" email)}
+            email]]]]
+        [:div.container {}
+         [:ul.navbar-list {}
+          [:li.navbar-item {}
+           [:a.navbar-link {:href "/login"} "Login"]]
+          [:li.navbar-item {}
+           [:a.navbar-link {:href "/signup"} "Sign up"]]]])]]]))
 
 (def title-row
   [:tr
@@ -42,11 +58,12 @@
       (for [book books]
         (book-row book))]]]))
 
-(defn index [books]
+(defn index [session books]
   (layout
+   session
    "Osmium"
    (html
-    [:div.container {}
+    [:div {}
      [:div.title-row {}
       [:div {}
        [:h2.main-title {} "Osmium"]
@@ -56,11 +73,12 @@
 ;; ======================================================================
 ;; Book View
 
-(defn book-view [book {:keys [edit?]}]
+(defn book-view [session book {:keys [edit?]}]
   (layout
+   session
    (str "Osmium - " (:book/title book))
    (html
-    [:div.container {}
+    [:div {}
      [:h2.main-title {} (:book/title book)]
      [:h5 {} [:em {} (:book/author book)]]
      (rating-icons (:book/rating book))
@@ -84,8 +102,9 @@
 ;; ======================================================================
 ;; User View
 
-(defn sign-up []
+(defn sign-up [session]
   (layout
+   session
    (str "Osmium - Sign up")
    (html
     [:h1 {} "Sign up"]
@@ -103,8 +122,9 @@
      [:button {:type "submit"}
       "Sign up"]])))
 
-(defn user-view [user]
+(defn user-view [session user]
   (layout
+   session
    (str "Osmium - Sign up")
    (html
     [:p {} (:user/email user)]

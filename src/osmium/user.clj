@@ -1,8 +1,12 @@
 (ns osmium.user
-  (:require [datomic.api :as d]))
+  (:require [datomic.api :as d]
+            [osmium.db :as db]))
+
+(defn by-id [db id]
+  (db/->map (d/entity (d/db (:conn db)) id)))
 
 (defn by-email [db email]
-  (into {} (d/entity (d/db (:conn db)) [:user/email email])))
+  (db/->map (d/entity (d/db (:conn db)) [:user/email email])))
 
 (defn new-user! [db user]
   (d/transact (:conn db) [(assoc user :db/id #db/id[:db.part/user])]))
@@ -17,7 +21,7 @@
     {:error error}
     (do
       (new-user! db {:user/email email :user/password password})
-      {:user/email email :user/password password})))
+      (by-email db email))))
 
 (defn update-password! [db {:keys [email old-pass new-pass pass-confirm]}]
   (let [user (by-email db email)]
