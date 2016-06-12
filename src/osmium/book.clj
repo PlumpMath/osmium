@@ -20,6 +20,9 @@
 ;;  ======================================================================
 ;; Write
 
+(defn create-book! [db book]
+  (d/transact (:conn db) [(assoc book :db/id #db/id[:db.part/user])]))
+
 (defn update-description! [db id description]
   (d/transact (:conn db) [{:db/id id :book/description description}]))
 

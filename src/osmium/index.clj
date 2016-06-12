@@ -8,8 +8,8 @@
    {:lang "en"}
    [:head
     [:title title]
-    (page/include-css "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css")
-    (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
+    ;; (page/include-css "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css")
+    ;; (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
     (page/include-css "/css/main.css")
     [:body
      [:div {:class "container"} content ]]]))
@@ -80,3 +80,42 @@
         [:button {}
          [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
           "Edit"]]])])))
+
+;; ======================================================================
+;; User View
+
+(defn sign-up []
+  (layout
+   (str "Osmium - Sign up")
+   (html
+    [:form {:action "/signup" :method :post}
+     [:span
+      [:label {:for "email"} "Email"]
+      [:input {:name "email" :type "email"}]]
+     [:span
+      [:label {:for "password"} "Password"]
+      [:input {:name "password" :type "password"}]]
+     [:span
+      [:label {:for "pass-confirm"} "Confirm Password"]
+      [:input {:name "pass-confirm" :type "password"}]]
+     [:button {:type "submit"}
+      "Sign up"]])))
+
+(defn user-view [user]
+  (layout
+   (str "Osmium - Sign up")
+   (html
+    [:p {} (:user/email user)]
+    [:h4 {} "Change your password"]
+    [:form {:action "/signup" :method "put"}
+     [:span
+      [:label {:for "old-pass"} "Old Password"]
+      [:input {:name "old-pass" :type "password"}]]
+     [:span
+      [:label {:for "new-pass"} "New Password"]
+      [:input {:name "new-pass" :type "password"}]]
+     [:span
+      [:label {:for "pass-confirm"} "Confirm Password"]
+      [:input {:name "pass-confirm" :type "password"}]]
+     [:button {:type "submit"}
+      "Edit"]])))

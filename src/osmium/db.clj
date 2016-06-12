@@ -9,16 +9,19 @@
   (start [component]
     (let [read (comp read-string slurp io/resource)
           book-schema (read "db/schemas/book.edn")
+          user-schema (read "db/schemas/user.edn")
           books (mapv #(assoc % :db/id #db/id[:db.part/user])
                       (read "db/seed/books.edn"))
           db (d/create-database uri)
           conn (d/connect uri)]
-      @(d/transact conn book-schema)
+      @(d/transact conn (concat book-schema user-schema))
       @(d/transact conn books)
       (assoc component :conn conn)))
   (stop [component]
     (when conn (d/release conn))
     (assoc component :conn nil)))
 
-(defn new-datomic-db [uri]
-  (map->Datomic {:uri uri}))
+(defn new-datomic-db
+  ([] (new-datomic-db "datomic:mem://localhost:4334/osmium"))
+  ([uri]
+   (map->Datomic {:uri uri})))

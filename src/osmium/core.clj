@@ -1,6 +1,7 @@
 (ns osmium.core
   (:gen-class)
   (:require [clojure.string :as str]
+            [clojure.set :as set]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [com.stuartsierra.component :as component]
@@ -15,15 +16,30 @@
             [prone.middleware :as prone]
             [osmium.db :as db]
             [osmium.book :as book]
-            [osmium.index :as index]))
+            [osmium.index :as index]
+            [osmium.user :as user]))
 
 ;;  ======================================================================
 ;; Routes
 
+(defn map-keys [f xs]
+  (into {} (map (fn [[k v]] [(f k) v]) xs)))
+
 (defn main-routes [db]
   (routes
-   (GET "/" req (let [books (book/all db)]
-                  (index/index books)))
+   (GET "/" _ (let [books (book/all db)]
+                (index/index books)))
+   (GET "/signup" _ (index/sign-up))
+   (POST "/signup" {params :params}
+     (let [new-user (user/signup! db (map-keys keyword params))]
+       (if-let [error (:error new-user)]
+         (pr-str error)
+         (index/user-view new-user))))
+   (PUT "/signup" {params :params}
+     (let [new-user  (user/update-password! db (map-keys keyword params))]
+       (if-let [error (:error new-user)]
+         (pr-str error)
+         (index/user-view new-user))))
    (GET "/book/:id" {params :params}
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
