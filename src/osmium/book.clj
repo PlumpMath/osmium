@@ -10,7 +10,7 @@
   )
 
 (defn ->map [e]
-  (into {} e))
+  (into {:db/id (:db/id e)} e))
 
 (defn by-id [db id]
   (->map (d/entity (d/db (:conn db)) id)))
@@ -20,4 +20,4 @@
 
 (defn all [db]
   (mapv (comp (partial by-id db) first)
-        (d/q '[:find ?b :in $ :where [?b :book/id _]] (d/db (:conn db)))))
+        (d/q '[:find ?b :in $ :where [?b :book/iban _]] (d/db (:conn db)))))

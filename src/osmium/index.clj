@@ -1,8 +1,9 @@
 (ns osmium.index
   (:require [hiccup.core :as html :refer [html]]
-            [hiccup.page :as page]))
+            [hiccup.page :as page]
+            [osmium.book :as book]))
 
-(defn application [title & content]
+(defn layout [title & content]
   (page/html5
    {:lang "en"}
    [:head
@@ -12,20 +13,6 @@
     (page/include-css "css/main.css")
     [:body
      [:div {:class "container"} content ]]]))
-
-(def books
-  [{:title "I Am a Strange Loop"
-    :author "Douglas R. Hofstadter"
-    :rating 5}
-   {:title "I Am a Strange Loop"
-    :author "Douglas R. Hofstadter"
-    :rating 5}
-   {:title "I Am a Strange Loop"
-    :author "Douglas R. Hofstadter"
-    :rating 4}
-   {:title "I Am a Strange Loop"
-    :author "Douglas R. Hofstadter"
-    :rating 5}])
 
 (def title-row
   [:tr
@@ -41,12 +28,12 @@
 
 (defn book-row [book]
   (html
-   [:tr.session-row {}
-    [:td.row-left (:title book)]
-    [:td.row-left (:author book)]
-    [:td.row-right.center {} (rating-icons (:rating book))]]))
+   [:tr.session-row {:onclick (format "document.location = '/book/%s'" (:db/id book) )}
+    [:td.row-left (:book/title book)]
+    [:td.row-left (:book/author book)]
+    [:td.row-right.center {} (rating-icons (:book/rating book))]]))
 
-(defn table []
+(defn table [books]
   (html
    [:div.main {}
     [:table.session-table.u-full-width {}
@@ -55,8 +42,8 @@
       (for [book books]
         (book-row book))]]]))
 
-(defn index []
-  (application
+(defn index [books]
+  (layout
    "Osmium"
    (html
     [:div.container {}
@@ -64,4 +51,20 @@
       [:div {}
        [:h2.main-title {} "Osmium"]
        [:h5 {} [:em {} "Dense books"]]]]
-     (table)])))
+     (table books)])))
+
+;; ======================================================================
+;; Book View
+
+(defn book-view [book]
+  (layout
+   (str "Osmium - " (:book/title book))
+   (html
+    [:div.container {}
+     [:div.title-row {}
+      [:div {}
+       [:h2.main-title {} (:book/title book)]
+       [:h5 {} [:em {} (:book/author book)]]
+       (rating-icons (:book/rating book))
+       [:p {}
+        (:book/description book)]]]])))

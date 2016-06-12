@@ -14,6 +14,7 @@
                  [hiccup "1.0.5"]
                  [com.datomic/datomic-free "0.9.5372"]
                  ;; Testing
+                 [prone "1.1.1"]
                  [org.clojure/test.check "0.9.0"]])
 
 (load-data-readers!)

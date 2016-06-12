@@ -13,8 +13,8 @@
                       (read "db/seed/books.edn"))
           db (d/create-database uri)
           conn (d/connect uri)]
-      (d/transact conn book-schema)
-      (d/transact conn books)
+      @(d/transact conn book-schema)
+      @(d/transact conn books)
       (assoc component :conn conn)))
   (stop [component]
     (when conn (d/release conn))
