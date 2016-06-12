@@ -3,12 +3,6 @@
 
 (def book-keys [:db/id :book/iban :book/title :book/author :book/description])
 
-(defn ffilter [id xs]
-  (first (filter #(= id (:id %)) xs)))
-
-(def books
-  )
-
 (defn ->map [e]
   (into {:db/id (:db/id e)} e))
 

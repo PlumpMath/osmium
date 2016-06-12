@@ -56,7 +56,7 @@
 ;; ======================================================================
 ;; Book View
 
-(defn book-view [book]
+(defn book-view [book {:keys [edit?]}]
   (layout
    (str "Osmium - " (:book/title book))
    (html
@@ -66,5 +66,16 @@
        [:h2.main-title {} (:book/title book)]
        [:h5 {} [:em {} (:book/author book)]]
        (rating-icons (:book/rating book))
-       [:p {}
-        (:book/description book)]]]])))
+       [:br]
+       (if edit?
+         [:textarea {}
+          (:book/description book)]
+         [:p {}
+          (:book/description book)])
+       [:br]
+       (if edit?
+         [:button {}
+          "Save"]
+         [:button {}
+          [:a {:href (format "/book/%s/edit" (:db/id book))}
+           "Edit"]])]]])))

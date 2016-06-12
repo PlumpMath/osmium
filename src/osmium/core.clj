@@ -24,8 +24,10 @@
   (routes
    (GET "/" req (let [books (book/all db)]
                   (index/index books)))
-   (GET "/book/:id" [id] (let [book (book/by-id db (Long. id))]
-                           (index/book-view book)))
+   (GET "/book/:id" {params :params}
+     (let [book (book/by-id db (Long. (:id params)))
+           mode (get params "mode")]
+       (index/book-view book {:edit? (= "edit" mode)})))
    (route/resources "/")))
 
 ;; ======================================================================
@@ -34,6 +36,7 @@
 (defn app-handler [db]
   (-> (main-routes db)
       wrap-edn-params
+      params/wrap-params
       wrap-reload
       prone/wrap-exceptions))
 
