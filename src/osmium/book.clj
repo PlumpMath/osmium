@@ -21,4 +21,7 @@
 ;; Write
 
 (defn update-description! [db id description]
-  (d/transact (:conn db) [{:db/id id :book/description  description}]))
+  (d/transact (:conn db) [{:db/id id :book/description description}]))
+
+(defn update-rating! [db id rating]
+  (d/transact (:conn db) [{:db/id id :book/rating rating}]))
