@@ -21,8 +21,10 @@
         [:div.container {}
          [:ul.navbar-list {}
           [:li.navbar-item {}
-           [:a.navbar-link {:href (format "user/%s" email)}
-            email]]]]
+           [:a.navbar-link {:href (format "/user/%s" email)}
+            email]]
+          [:li.navbar-item {}
+           [:a.navbar-link {:href "/logout"} "Log out"]]]]
         [:div.container {}
          [:ul.navbar-list {}
           [:li.navbar-item {}
@@ -95,9 +97,10 @@
         [:p {}
          (:book/description book)]
         [:br]
-        [:button {}
-         [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
-          "Edit"]]])])))
+        (when (logged-in? session)
+          [:button {}
+           [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
+            "Edit"]])])])))
 
 ;; ======================================================================
 ;; User View

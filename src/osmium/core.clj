@@ -40,6 +40,9 @@
      (if (index/logged-in? session)
        (response/redirect "/")
        "login"))
+   (GET "/logout" _
+     (-> (response/redirect "/")
+         (assoc :session {})))
    (GET "/signup" {session :session} (index/sign-up session))
    (POST "/signup" {params :params}
      (let [new-user (user/signup! db (map-keys keyword params))]
