@@ -303,7 +303,7 @@ textarea {
 }
 
 .rating span:hover ~ span label, .rating span:hover label, .rating span.checked label, .rating span.checked ~ span label {
-    color:#000;
+    color: #000;
 }
 
 .book-view {

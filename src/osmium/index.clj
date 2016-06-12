@@ -80,10 +80,11 @@
   (html
    [:form.rating {:action (format "/book/%s/rate" book-id) :method :post}
     (for [i (range 5)]
-      [:span {:class "rating-icon"}
+      [:span {}
        [:input {:id (str "start-" i) :type "radio" :name "rating" :value i}]
        [:label {:for (str "start-" i)}
-        [:i {:class "fa fa-star"}]]])]))
+        [:i {:class "fa fa-star"}]]])
+    [:button {:type "submit"} "Rate"]]))
 
 (defn book-view [session book {:keys [edit?]}]
   (layout
