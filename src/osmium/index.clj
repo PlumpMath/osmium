@@ -8,8 +8,8 @@
    {:lang "en"}
    [:head
     [:title title]
-    ;; (page/include-css "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css")
-    ;; (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
+    (page/include-css "https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css")
+    (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
     (page/include-css "/css/main.css")
     [:body
      [:div {:class "container"} content ]]]))
@@ -88,6 +88,7 @@
   (layout
    (str "Osmium - Sign up")
    (html
+    [:h1 {} "Sign up"]
     [:form {:action "/signup" :method :post}
      [:span
       [:label {:for "email"} "Email"]
@@ -98,6 +99,7 @@
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
+     [:br]
      [:button {:type "submit"}
       "Sign up"]])))
 
@@ -107,7 +109,8 @@
    (html
     [:p {} (:user/email user)]
     [:h4 {} "Change your password"]
-    [:form {:action "/signup" :method "put"}
+    [:form {:action "/update-pass" :method :post}
+     [:input {:name "email" :type "hidden" :value (:user/email user)}]
      [:span
       [:label {:for "old-pass"} "Old Password"]
       [:input {:name "old-pass" :type "password"}]]
@@ -117,5 +120,6 @@
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
+     [:br]
      [:button {:type "submit"}
       "Edit"]])))

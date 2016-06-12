@@ -29,17 +29,21 @@
   (routes
    (GET "/" _ (let [books (book/all db)]
                 (index/index books)))
+   (GET "/user/:email" [email]
+     (if-let [user (user/by-email db email)]
+       (index/user-view user)
+       "user not found"))
    (GET "/signup" _ (index/sign-up))
    (POST "/signup" {params :params}
      (let [new-user (user/signup! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
          (pr-str error)
-         (index/user-view new-user))))
-   (PUT "/signup" {params :params}
-     (let [new-user  (user/update-password! db (map-keys keyword params))]
+         (response/redirect (format "/user/%s" (:user/email new-user))))))
+   (POST "/update-pass" {params :params}
+     (let [new-user (user/update-password! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
          (pr-str error)
-         (index/user-view new-user))))
+         (response/redirect (format "/user/%s" (:user/email new-user))))))
    (GET "/book/:id" {params :params}
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
