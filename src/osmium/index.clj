@@ -135,11 +135,11 @@
    session
    (str "Osmium - Sign up")
    (html
-    [:h1 {} "Sign up"]
+    [:h2 {} "Sign up"]
     [:form {:action "/signup" :method :post}
      [:span
       [:label {:for "email"} "Email"]
-      [:input {:name "email" :type "email"}]]
+      [:input {:id "email" :name "email" :type "email"}]]
      [:span
       [:label {:for "password"} "Password"]
       [:input {:name "password" :type "password"}]]
@@ -147,7 +147,7 @@
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
      [:br]
-     [:button {:type "submit"} "Sign up"]])))
+     [:button {:id "signup-button" :type "submit"} "Sign up"]])))
 
 (defn- input [name label]
   [:span

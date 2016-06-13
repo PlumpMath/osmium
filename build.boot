@@ -16,7 +16,14 @@
                  [com.datomic/datomic-free "0.9.5372"]
                  ;; Testing
                  [prone "1.1.1"]
-                 [org.clojure/test.check "0.9.0"]])
+                 [org.clojure/test.check "0.9.0"]
+                 [clj-webdriver "0.7.2"
+                  :exclusions [commons-logging commons-codec org.apache.httpcomponents/httpclient]]
+                 [org.seleniumhq.selenium/selenium-htmlunit-driver "2.52.0"
+                  :exclusions [org.eclipse.jetty/jetty-util org.eclipse.jetty/jetty-io com.google.guava/guava commons-logging commons-codec org.apache.httpcomponents/httpclient]]
+                 [org.seleniumhq.selenium/selenium-java "2.53.0"
+                  :exclusions
+                  [org.seleniumhq.selenium/selenium-api org.eclipse.jetty/jetty-io com.google.guava/guava org.seleniumhq.selenium/selenium-support commons-codec org.apache.httpcomponents/httpclient org.seleniumhq.selenium/selenium-remote-driver commons-codec org.apache.httpcomponents/httpclient]]])
 
 (load-data-readers!)
 
