@@ -6,6 +6,11 @@
 (defn logged-in? [session]
   (not (empty? (:user session))))
 
+(defn- footer-link [link title]
+  (html
+   [:li.navbar-item {}
+    [:a.navbar-link {:href link} title]]))
+
 (defn layout [session title & content]
   (page/html5
    {:lang "en"}
@@ -21,17 +26,13 @@
         (let [email (get-in session [:user :user/email])]
           [:div.container {}
            [:ul.navbar-list {}
-            [:li.navbar-item {}
-             [:a.navbar-link {:href (format "/user/%s" email)}
-              email]]
-            [:li.navbar-item {}
-             [:a.navbar-link {:href "/logout"} "Log out"]]]])
+            (footer-link (format "/user/%s" email) email)
+            (footer-link "/logout" "Log out")
+            (footer-link "/book" "Add Book")]])
         [:div.container {}
          [:ul.navbar-list {}
-          [:li.navbar-item {}
-           [:a.navbar-link {:href "/login"} "Login"]]
-          [:li.navbar-item {}
-           [:a.navbar-link {:href "/signup"} "Sign up"]]]])]]]))
+          (footer-link "/login" "Login")
+          (footer-link "/signup" "Sign up")]])]]]))
 
 (def title-row
   [:tr
