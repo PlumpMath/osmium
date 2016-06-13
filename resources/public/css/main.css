@@ -310,3 +310,8 @@ textarea {
     display: flex;
     flex-direction: column;
 }
+
+h1 > a {
+    text-decoration: none;
+    color: black;
+}

@@ -75,7 +75,6 @@
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
        (index/book-view session book {:edit? (= "edit" mode)})))
-
    (POST "/book/:id/rate" {params :params session :session}
      (if-not (index/logged-in? session)
        (response/status (response/response "Not authorized") 401)

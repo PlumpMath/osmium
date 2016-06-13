@@ -20,7 +20,9 @@
     (page/include-css "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css")
     (page/include-css "/css/main.css")
     [:body
-     [:div {:class "container"} content ]
+     [:div {:class "container"}
+      [:h1 {} [:a {:href "/"} "Osmium"]]
+      content]
      [:div.footer
       (if (logged-in? session)
         (let [email (get-in session [:user :user/email])]
@@ -43,7 +45,7 @@
 (defn rating-icons [r]
   (html
    [:span.rating {}
-    (for [i (range r)]
+    (for [i (range (or r 0))]
       [:i {:class "fa fa-star"}])]))
 
 (defn book-row [book]
@@ -68,10 +70,6 @@
    "Osmium"
    (html
     [:div {}
-     [:div.title-row {}
-      [:div {}
-       [:h2.main-title {} "Osmium"]
-       [:h5 {} [:em {} "Dense books"]]]]
      (table books)])))
 
 ;; ======================================================================
