@@ -1,4 +1,4 @@
-(ns osmium.index
+(ns osmium.web
   (:require [hiccup.core :as html :refer [html]]
             [hiccup.page :as page]
             [osmium.book :as book]))

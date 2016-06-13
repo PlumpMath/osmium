@@ -18,7 +18,7 @@
             [prone.middleware :as prone]
             [osmium.db :as db]
             [osmium.book :as book]
-            [osmium.index :as index]
+            [osmium.web :as web]
             [osmium.user :as user]))
 
 ;;  ======================================================================
@@ -28,16 +28,16 @@
   (routes
    (GET "/" {session :session}
      (let [books (book/all db)]
-       (index/index session books)))
+       (web/index session books)))
    (GET "/user/:email" req
      (let [email (get-in req [:params :email])]
        (if-let [user (user/by-email db email)]
-         (index/user-view (:session req) user)
+         (web/user-view (:session req) user)
          "user not found")))
    (GET "/login" {session :session}
-     (if (index/logged-in? session)
+     (if (web/logged-in? session)
        (response/redirect "/")
-       (index/log-in session)))
+       (web/log-in session)))
    (POST "/login" {params :params}
      (let [user (user/login db (map-keys keyword params))]
        (if-let [error (:error user)]
@@ -47,7 +47,7 @@
    (GET "/logout" _
      (-> (response/redirect "/")
          (assoc :session {})))
-   (GET "/signup" {session :session} (index/sign-up session))
+   (GET "/signup" {session :session} (web/sign-up session))
    (POST "/signup" {params :params}
      (let [new-user (user/signup! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
@@ -61,11 +61,11 @@
          (pr-str error)
          (response/redirect (format "/user/%s" (:user/email new-user))))))
    (GET "/book" {session :session}
-     (if-not (index/logged-in? session)
+     (if-not (web/logged-in? session)
        (response/status (response/response "Not authorized") 401)
-       (index/new-book session)))
+       (web/new-book session)))
    (POST "/book" {params :params session :session}
-     (if-not (index/logged-in? session)
+     (if-not (web/logged-in? session)
        (response/status (response/response "Not authorized") 401)
        (let [new-book (book/new-book! db (map-keys (partial keyword "book") params))]
          (if-let [error (:error new-book)]
@@ -74,16 +74,16 @@
    (GET "/book/:id" {params :params session :session}
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
-       (index/book-view session book {:edit? (= "edit" mode)})))
+       (web/book-view session book {:edit? (= "edit" mode)})))
    (POST "/book/:id/rate" {params :params session :session}
-     (if-not (index/logged-in? session)
+     (if-not (web/logged-in? session)
        (response/status (response/response "Not authorized") 401)
        (if-let [rating (:rating (map-keys keyword params))]
          (do
            (book/update-rating! db (Long. (:id params)) (Integer. rating))
            (response/redirect (format "/book/%s" (:id params)))))))
    (POST "/book/:id/description" {params :params session :session}
-     (if-not (index/logged-in? session)
+     (if-not (web/logged-in? session)
        (response/status (response/response "Not authorized") 401)
        (let [description (get params "book/description")]
          (book/update-description! db (Long. (:id params)) description)

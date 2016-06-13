@@ -28,6 +28,10 @@
   (taxi/input-text driver sel text))
 
 ;; TODO: select options
+;; TODO: wait (not necessary for a performance demo!)
+
+;; ======================================================================
+;; API
 
 (defmulti eval! (fn [driver xs] (type (first xs))))
 
@@ -39,7 +43,3 @@
 (defmethod eval! clojure.lang.Keyword
   [driver x]
   (eval!* driver x))
-
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
