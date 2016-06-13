@@ -1,7 +1,17 @@
 (ns osmium.web
+  (:use [medley.core])
   (:require [hiccup.core :as html :refer [html]]
             [hiccup.page :as page]
             [osmium.book :as book]))
+
+(defn- uuid-id []
+  (str "osmium-" (random-uuid)))
+
+(defn action-map [action-type m]
+  (cond-> (-> m
+              (update :class (partial str "osmium-action "))
+              (assoc :data-action (name action-type)))
+    (nil? (:id m)) (assoc :id (uuid-id))))
 
 (defn logged-in? [session]
   (not (empty? (:user session))))
@@ -9,7 +19,9 @@
 (defn- footer-link [link title]
   (html
    [:li.navbar-item {}
-    [:a.navbar-link {:href link} title]]))
+    [:a (action-map :click {:class "navbar-link"
+                            :href link})
+     title]]))
 
 (defn layout [session title & content]
   (page/html5
@@ -83,7 +95,7 @@
        [:input {:id (str "start-" i) :type "radio" :name "rating" :value i}]
        [:label {:for (str "start-" i)}
         [:i {:class "fa fa-star"}]]])
-    [:button {:type "submit"} "Rate"]]))
+    [:button (action-map :click {:type "submit"}) "Rate"]]))
 
 (defn book-view [session book {:keys [edit?]}]
   (layout
@@ -102,14 +114,15 @@
         [:textarea {:name "book/description"}
          (:book/description book)]
         [:br]
-        [:button {:type "submit"}
+        [:button (action-map :click {:type "submit"})
          "Save"]]
        [:div {}
         [:p {} (:book/description book)]
         [:br]
         (when (logged-in? session)
           [:button {}
-           [:a {:href (format "/book/%s?mode=edit" (:db/id book))} "Edit"]])])])))
+           [:a (action-map :click {:href (format "/book/%s?mode=edit" (:db/id book))})
+            "Edit"]])])])))
 
 ;; ======================================================================
 ;; User View
@@ -128,7 +141,7 @@
       [:label {:for "password"} "Password"]
       [:input {:name "password" :type "password"}]]
      [:br]
-     [:button {:type "submit"} "Log in"]])))
+     [:button (action-map :click {:type "submit"}) "Log in"]])))
 
 (defn sign-up [session]
   (layout
@@ -147,7 +160,7 @@
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
      [:br]
-     [:button {:id "signup-button" :type "submit"} "Sign up"]])))
+     [:button (action-map :click {:type "submit"}) "Sign up"]])))
 
 (defn- input [name label]
   [:span
@@ -173,7 +186,7 @@
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
      [:br]
-     [:button {:type "submit"} "Edit"]])))
+     [:button (action-map :click {:type "submit"}) "Edit"]])))
 
 (defn new-book [session]
   (layout
@@ -188,4 +201,4 @@
      [:span
       [:label {:for "description"} "Description"]
       [:textarea {:name "description"}]]
-     [:button {:type "submit"} "Create"]])))
+     [:button (action-map :click {:type "submit"}) "Create"]])))
