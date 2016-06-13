@@ -1,4 +1,5 @@
 (ns osmium.book
+  (:use [medley.core])
   (:require [datomic.api :as d]
             [osmium.db :as db]))
 
@@ -26,3 +27,14 @@
 
 (defn update-rating! [db id rating]
   (d/transact (:conn db) [{:db/id id :book/rating rating}]))
+
+(defn new-book! [db book]
+  (if-let [error (cond
+                   (empty? (:book/title book)) :empty-title
+                   (empty? (:book/author book)) :empty-author
+                   (empty? (:book/iban book)) :empty-iban
+                   (empty? (:book/description book)) :empty-description)]
+    {:error error}
+    (do
+      (create-book! db book)
+      (by-iban db (:book/iban book)))))

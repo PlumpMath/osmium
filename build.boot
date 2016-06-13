@@ -6,6 +6,7 @@
  :resource-paths  #{"resources"}
  :dependencies '[
                  ;; Server
+                 [medley "0.8.2"]
                  [com.stuartsierra/component "0.2.3"]
                  [ring "1.3.2"]
                  [fogus/ring-edn "0.3.0"]

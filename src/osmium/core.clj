@@ -1,5 +1,6 @@
 (ns osmium.core
   (:gen-class)
+  (:use [medley.core])
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.edn :as edn]
@@ -22,9 +23,6 @@
 
 ;;  ======================================================================
 ;; Routes
-
-(defn map-keys [f xs]
-  (into {} (map (fn [[k v]] [(f k) v]) xs)))
 
 (defn main-routes [db]
   (routes
@@ -62,21 +60,35 @@
        (if-let [error (:error new-user)]
          (pr-str error)
          (response/redirect (format "/user/%s" (:user/email new-user))))))
+   (GET "/book" {session :session}
+     (if-not (index/logged-in? session)
+       (response/status (response/response "Not authorized") 401)
+       (index/new-book session)))
+   (POST "/book" {params :params session :session}
+     (if-not (index/logged-in? session)
+       (response/status (response/response "Not authorized") 401)
+       (let [new-book (book/new-book! db (map-keys (partial keyword "book") params))]
+         (if-let [error (:error new-book)]
+           (pr-str error)
+           (response/redirect (format "/book/%s" (:db/id new-book)))))))
    (GET "/book/:id" {params :params session :session}
      (let [book (book/by-id db (Long. (:id params)))
            mode (get params "mode")]
        (index/book-view session book {:edit? (= "edit" mode)})))
+
    (POST "/book/:id/rate" {params :params session :session}
-     (if (index/logged-in? session)
+     (if-not (index/logged-in? session)
+       (response/status (response/response "Not authorized") 401)
        (if-let [rating (:rating (map-keys keyword params))]
          (do
            (book/update-rating! db (Long. (:id params)) (Integer. rating))
-           (response/redirect (format "/book/%s" (:id params)))))
-       (response/status (response/response "You can't rate") 401)))
-   (POST "/book/:id" {params :params}
-     (let [description (get params "book/description")]
-       (book/update-description! db (Long. (:id params)) description)
-       (response/redirect (format "/book/%s" (:id params)))))
+           (response/redirect (format "/book/%s" (:id params)))))))
+   (POST "/book/:id/description" {params :params session :session}
+     (if-not (index/logged-in? session)
+       (response/status (response/response "Not authorized") 401)
+       (let [description (get params "book/description")]
+         (book/update-description! db (Long. (:id params)) description)
+         (response/redirect (format "/book/%s" (:id params))))))
    (route/resources "/")))
 
 ;; ======================================================================

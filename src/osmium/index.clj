@@ -98,7 +98,7 @@
        (rating-icons-form (:db/id book))
        (rating-icons (:book/rating book)))
      (if edit?
-       [:form {:action (format "/book/%s" (:db/id book))
+       [:form {:action (format "/book/%s/description" (:db/id book))
                :method :post}
         [:textarea {:name "book/description"}
          (:book/description book)]
@@ -106,13 +106,11 @@
         [:button {:type "submit"}
          "Save"]]
        [:div {}
-        [:p {}
-         (:book/description book)]
+        [:p {} (:book/description book)]
         [:br]
         (when (logged-in? session)
           [:button {}
-           [:a {:href (format "/book/%s?mode=edit" (:db/id book))}
-            "Edit"]])])])))
+           [:a {:href (format "/book/%s?mode=edit" (:db/id book))} "Edit"]])])])))
 
 ;; ======================================================================
 ;; User View
@@ -131,8 +129,7 @@
       [:label {:for "password"} "Password"]
       [:input {:name "password" :type "password"}]]
      [:br]
-     [:button {:type "submit"}
-      "Log in"]])))
+     [:button {:type "submit"} "Log in"]])))
 
 (defn sign-up [session]
   (layout
@@ -151,8 +148,12 @@
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
      [:br]
-     [:button {:type "submit"}
-      "Sign up"]])))
+     [:button {:type "submit"} "Sign up"]])))
+
+(defn- input [name label]
+  [:span
+   [:label {:for name} label]
+   [:input {:name name}]])
 
 (defn user-view [session user]
   (layout
@@ -173,5 +174,19 @@
       [:label {:for "pass-confirm"} "Confirm Password"]
       [:input {:name "pass-confirm" :type "password"}]]
      [:br]
-     [:button {:type "submit"}
-      "Edit"]])))
+     [:button {:type "submit"} "Edit"]])))
+
+(defn new-book [session]
+  (layout
+   session
+   (str "Osmium - New Book")
+   (html
+    [:h2 "New Book"]
+    [:form {:action "/book" :method :post}
+     (input "title" "Title")
+     (input "author" "Author")
+     (input "iban" "IBAN")
+     [:span
+      [:label {:for "description"} "Description"]
+      [:textarea {:name "description"}]]
+     [:button {:type "submit"} "Create"]])))
