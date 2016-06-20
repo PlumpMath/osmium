@@ -106,11 +106,14 @@
       (taxi/quit driver))
     (o/stop!)))
 
+(defn restart! []
+  (swap! replay assoc :stop 0))
+
 (defn step! []
   (let [{:keys [actions step]} @replay
         next-action (nth actions step)]
     (eval! @replay-driver next-action)
     (if (< step (dec (count actions)))
       (swap! replay update :step inc)
-      (swap! replay assoc :step 0))
+      (restart!))
     next-action))
