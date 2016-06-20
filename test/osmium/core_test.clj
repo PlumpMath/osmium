@@ -36,8 +36,9 @@
 (defmethod eval!* :click [driver [_ sel]]
   (taxi/click driver sel))
 
-(defmethod eval!* :fill [driver [_ {:keys [sel text]}]]
-  (taxi/input-text driver sel text))
+(defmethod eval!* :fill [driver [_ sel]]
+  (let [text "!!!!"]
+    (taxi/input-text driver sel text)))
 
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
@@ -76,7 +77,7 @@
           actions []]
      (if (zero? n)
        actions
-       (if-let [action (first (find-actions d))]
+       (if-let [action (rand-nth (seq (find-actions d)))]
          (let [action' (expand-action d action)]
            (eval! d action')
            (f action')
@@ -86,15 +87,29 @@
 ;; ======================================================================
 ;; Tests
 
+(defonce replay-driver (atom (taxi/new-driver {:browser :firefox})))
+
+(defonce replay (atom {:actions [] :step 0}))
+
 (deftest users
   (testing "All created users are valid"
     (o/start!)
     (let [driver (taxi/new-driver {:browser :firefox})
           db (:db @o/system)]
       (eval! driver [:to "localhost:3005"])
-      (walk-n-steps! driver 10
-                     (fn [a]
-                       (doseq [user (user/all-users db)]
-                         (is (s/valid? ::user/user user)))))
+      (let [actions (walk-n-steps! driver 10
+                                   (fn [a]
+                                     (println a)
+                                     (doseq [user (user/all-users db)]
+                                       (is (s/valid? ::user/user user)))))]
+        (reset! replay {:actions actions :step 0}))
       (taxi/quit driver))
     (o/stop!)))
+
+(defn step! []
+  (let [{:keys [actions step]} @replay
+        next-action (nth actions step)]
+    (eval! @replay-driver next-action)
+    (if (< (count actions) step)
+      (swap! step inc)
+      (reset! step 0))))

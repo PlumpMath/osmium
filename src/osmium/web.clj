@@ -92,9 +92,9 @@
    [:form.rating {:action (format "/book/%s/rate" book-id) :method :post}
     (for [i (range 5)]
       [:span {}
-       [:input {:id (str "start-" i) :type "radio" :name "rating" :value i}]
-       [:label {:for (str "start-" i)}
-        [:i {:class "fa fa-star"}]]])
+       [:input (action-map :click {:id (str "start-" i) :type "radio" :name "rating" :value i})
+        [:label {:for (str "start-" i)}
+         [:i {:class "fa fa-star"}]]]])
     [:button (action-map :click {:class "rate" :type "submit"}) "Rate"]]))
 
 (defn book-view [session book {:keys [edit?]}]
@@ -136,10 +136,10 @@
     [:form {:action "/login" :method :post}
      [:span
       [:label {:for "email"} "Email"]
-      [:input {:name "email" :type "email"}]]
+      [:input (action-map :fill {:name "email" :type "email"})]]
      [:span
       [:label {:for "password"} "Password"]
-      [:input {:name "password" :type "password"}]]
+      [:input (action-map {:name "password" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Log in"]])))
 
@@ -152,20 +152,20 @@
     [:form {:action "/signup" :method :post}
      [:span
       [:label {:for "email"} "Email"]
-      [:input {:id "email" :name "email" :type "email"}]]
+      [:input (action-map :fill {:id "email" :name "email" :type "email"})]]
      [:span
       [:label {:for "password"} "Password"]
-      [:input {:name "password" :type "password"}]]
+      [:input (action-map :fill {:name "password" :type "password"})]]
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
-      [:input {:name "pass-confirm" :type "password"}]]
+      [:input (action-map :fill {:name "pass-confirm" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Sign up"]])))
 
 (defn- input [name label]
   [:span
    [:label {:for name} label]
-   [:input {:name name}]])
+   [:input (action-map :fill {:name name})]])
 
 (defn user-view [session user]
   (layout
@@ -175,16 +175,16 @@
     [:p {} (::user/email user)]
     [:h4 {} "Change your password"]
     [:form {:action "/update-pass" :method :post}
-     [:input {:name "email" :type "hidden" :value (::user/email user)}]
+     [:input (action-map :fill {:name "email" :type "hidden" :value (::user/email user)})]
      [:span
       [:label {:for "old-pass"} "Old Password"]
-      [:input {:name "old-pass" :type "password"}]]
+      [:input (action-map :fill {:name "old-pass" :type "password"})]]
      [:span
       [:label {:for "new-pass"} "New Password"]
-      [:input {:name "new-pass" :type "password"}]]
+      [:input (action-map :fill {:name "new-pass" :type "password"})]]
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
-      [:input {:name "pass-confirm" :type "password"}]]
+      [:input (action-map :fill {:name "pass-confirm" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Edit"]])))
 
@@ -200,5 +200,5 @@
      (input "iban" "IBAN")
      [:span
       [:label {:for "description"} "Description"]
-      [:textarea {:name "description"}]]
+      [:textarea (action-map :write {:name "description"})]]
      [:button (action-map :click {:type "submit"}) "Create"]])))
