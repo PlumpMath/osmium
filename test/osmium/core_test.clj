@@ -110,6 +110,7 @@
   (let [{:keys [actions step]} @replay
         next-action (nth actions step)]
     (eval! @replay-driver next-action)
-    (if (< (count actions) step)
-      (swap! step inc)
-      (reset! step 0))))
+    (if (< step (dec (count actions)))
+      (swap! replay update :step inc)
+      (swap! replay assoc :step 0))
+    next-action))
