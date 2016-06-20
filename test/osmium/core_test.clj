@@ -1,11 +1,14 @@
 (ns osmium.core-test
+  (:import [clojure.test.check.generators Generator])
   (:require [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
             [osmium.user :as user]
             [clojure.spec :as s]
             [clojure.spec.gen :as gen]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.test.check.generators :as test-gen ]))
+
 
 (defmulti eval!* (fn [driver [type data]] type))
 

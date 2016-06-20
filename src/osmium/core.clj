@@ -106,7 +106,7 @@
 (defrecord Server [db port jetty]
   component/Lifecycle
   (start [component]
-    (println "Start server at port " port)
+    (println "Start server at port:" port)
     (assoc component :jetty (start-jetty (app-handler db) port)))
   (stop [component]
     (println "Stop server")

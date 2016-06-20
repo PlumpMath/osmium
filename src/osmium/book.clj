@@ -1,5 +1,4 @@
 (ns osmium.book
-  (:use [medley.core])
   (:require [datomic.api :as d]
             [osmium.db :as db]))
 
@@ -16,7 +15,7 @@
         (d/q '[:find ?b :in $ :where [?b :book/iban _]] (d/db (:conn db)))))
 
 
-;;  ======================================================================
+;; ======================================================================
 ;; Write
 
 (defn create-book! [db book]
