@@ -37,7 +37,7 @@
       content]
      [:div.footer
       (if (logged-in? session)
-        (let [email (get-in session [:user :user/email])]
+        (let [email (get-in session [:user ::user/email])]
           [:div.container {}
            [:ul.navbar-list {}
             (footer-link (format "/user/%s" email) email)
@@ -172,10 +172,10 @@
    session
    (str "Osmium - Sign up")
    (html
-    [:p {} (:user/email user)]
+    [:p {} (::user/email user)]
     [:h4 {} "Change your password"]
     [:form {:action "/update-pass" :method :post}
-     [:input {:name "email" :type "hidden" :value (:user/email user)}]
+     [:input {:name "email" :type "hidden" :value (::user/email user)}]
      [:span
       [:label {:for "old-pass"} "Old Password"]
       [:input {:name "old-pass" :type "password"}]]

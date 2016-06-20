@@ -1,2 +1,2 @@
-[{:user/email "s@s.com"
-  :user/password "pass"}]
+[{:osmium.user/email "s@s.com"
+  :osmium.user/password "password"}]
