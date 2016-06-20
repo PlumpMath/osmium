@@ -2,16 +2,21 @@
   (:use [medley.core])
   (:require [hiccup.core :as html :refer [html]]
             [hiccup.page :as page]
-            [osmium.book :as book]))
+            [osmium.book :as book]
+            [osmium.user :as user]))
 
 (defn- uuid-id []
   (str "osmium-" (random-uuid)))
 
-(defn action-map [action-type m]
-  (cond-> (-> m
-              (update :class (partial str "osmium-action "))
-              (assoc :data-action (name action-type)))
-    (nil? (:id m)) (assoc :id (uuid-id))))
+(defn kw->str [k]
+  (str (.-sym k)))
+
+(defmacro action-map [action-type m]
+  (let [action-id (uuid-id)]
+    `(cond-> (-> ~m
+                 (update :class (partial str "osmium-action "))
+                 (assoc :data-action ~(kw->str action-type)))
+       (nil? (:id ~m)) (assoc :id ~action-id))))
 
 (defn logged-in? [session]
   (not (empty? (:user session))))
@@ -136,10 +141,10 @@
     [:form {:action "/login" :method :post}
      [:span
       [:label {:for "email"} "Email"]
-      [:input (action-map :fill {:name "email" :type "email"})]]
+      [:input (action-map ::user/email {:name "email" :type "email"})]]
      [:span
       [:label {:for "password"} "Password"]
-      [:input (action-map {:name "password" :type "password"})]]
+      [:input (action-map ::user/password {:name "password" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Log in"]])))
 
@@ -152,13 +157,13 @@
     [:form {:action "/signup" :method :post}
      [:span
       [:label {:for "email"} "Email"]
-      [:input (action-map :fill {:id "email" :name "email" :type "email"})]]
+      [:input (action-map ::user/email {:id "email" :name "email" :type "email"})]]
      [:span
       [:label {:for "password"} "Password"]
-      [:input (action-map :fill {:name "password" :type "password"})]]
+      [:input (action-map ::user/password {:name "password" :type "password"})]]
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
-      [:input (action-map :fill {:name "pass-confirm" :type "password"})]]
+      [:input (action-map ::user/password {:name "pass-confirm" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Sign up"]])))
 
@@ -175,16 +180,16 @@
     [:p {} (::user/email user)]
     [:h4 {} "Change your password"]
     [:form {:action "/update-pass" :method :post}
-     [:input (action-map :fill {:name "email" :type "hidden" :value (::user/email user)})]
+     [:input (action-map ::user/email {:name "email" :type "hidden" :value (::user/email user)})]
      [:span
       [:label {:for "old-pass"} "Old Password"]
-      [:input (action-map :fill {:name "old-pass" :type "password"})]]
+      [:input (action-map ::user/password {:name "old-pass" :type "password"})]]
      [:span
       [:label {:for "new-pass"} "New Password"]
-      [:input (action-map :fill {:name "new-pass" :type "password"})]]
+      [:input (action-map ::user/password {:name "new-pass" :type "password"})]]
      [:span
       [:label {:for "pass-confirm"} "Confirm Password"]
-      [:input (action-map :fill {:name "pass-confirm" :type "password"})]]
+      [:input (action-map ::user/password {:name "pass-confirm" :type "password"})]]
      [:br]
      [:button (action-map :click {:type "submit"}) "Edit"]])))
 
@@ -200,5 +205,5 @@
      (input "iban" "IBAN")
      [:span
       [:label {:for "description"} "Description"]
-      [:textarea (action-map :write {:name "description"})]]
+      [:textarea (action-map :fill {:name "description"})]]
      [:button (action-map :click {:type "submit"}) "Create"]])))

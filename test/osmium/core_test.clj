@@ -4,6 +4,7 @@
             [osmium.core :as o]
             [osmium.user :as user]
             [clojure.spec :as s]
+            [clojure.spec.gen :as gen]
             [clojure.set :as set]))
 
 (defmulti eval!* (fn [driver [type data]] type))
@@ -36,9 +37,19 @@
 (defmethod eval!* :click [driver [_ sel]]
   (taxi/click driver sel))
 
-(defmethod eval!* :fill [driver [_ sel]]
-  (let [text "!!!!"]
+(defmethod eval!* :fill [driver [_ sel text]]
+  (let [text (or text (gen/generate (s/gen string?)))]
     (taxi/input-text driver sel text)))
+
+;; Spec
+
+(defn- spec-keyword? [k]
+  (contains? (s/registry) k))
+
+(defmethod eval!* :default [driver [k sel]]
+  (assert (spec-keyword? k) (str k " is not a spec keyword"))
+  (let [val (gen/generate (s/gen k))]
+    (eval!* driver [:fill sel (str val)])))
 
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
@@ -88,6 +99,11 @@
 ;; Tests
 
 (defonce replay-driver (atom (taxi/new-driver {:browser :firefox})))
+
+(defn restart-driver! []
+  (swap! replay-driver (fn [d]
+                         (taxi/quit d)
+                         (taxi/new-driver {:browser :firefox}))))
 
 (defonce replay (atom {:actions [] :step 0}))
 
