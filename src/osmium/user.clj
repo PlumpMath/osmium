@@ -8,8 +8,9 @@
 
 (def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 
-(s/def :db/id number?)
-(s/def ::email (s/and string? (partial re-matches email-regex)))
+(s/def :db/id (s/and number? pos?))
+(s/def ::email (s/with-gen (s/and string? (partial re-matches email-regex))
+                 #(s/gen #{"jorge@borges.com" "eb@whitehead.com"})))
 (s/def ::password (s/and string? #(< 6 (count %))))
 
 (s/def ::user (s/keys :req [:db/id ::email ::password]))
