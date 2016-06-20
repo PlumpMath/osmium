@@ -95,7 +95,7 @@
        [:input {:id (str "start-" i) :type "radio" :name "rating" :value i}]
        [:label {:for (str "start-" i)}
         [:i {:class "fa fa-star"}]]])
-    [:button (action-map :click {:type "submit"}) "Rate"]]))
+    [:button (action-map :click {:class "rate" :type "submit"}) "Rate"]]))
 
 (defn book-view [session book {:keys [edit?]}]
   (layout

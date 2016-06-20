@@ -315,3 +315,7 @@ h1 > a {
     text-decoration: none;
     color: black;
 }
+
+button.rate {
+    margin-right: 1rem;
+}
