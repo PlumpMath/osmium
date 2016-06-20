@@ -1,7 +1,8 @@
 (ns osmium.core-test
   (:require [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
-            [osmium.core :refer :all]))
+            [osmium.core :as o]
+            [clojure.set :as set]))
 
 (defmulti eval!* (fn [driver [type data]] type))
 
@@ -39,15 +40,16 @@
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
 
-
 (defn- ele->id [ele]
   (taxi/attribute ele "id"))
 
 (defn find-actions [driver]
-  (letfn [(ele->action [])])
   (->> (taxi/find-elements driver {:css ".osmium-action"})
        (map (fn [ele] [:action (ele->id ele)]))
        set))
+
+(defn possible-actions [driver]
+  (conj (find-actions driver) :back :forward :back))
 
 ;; ======================================================================
 ;; API
@@ -64,14 +66,17 @@
   (eval!* driver x))
 
 (defn walk-n-steps!
-  "Generates an action and evals it until n actions or no possible actions"
-  [d n]
-  (loop [n n
-         actions []]
-    (if (zero? n)
-      actions
-      (if-let [action (first (find-actions d))]
-        (do
-          (eval! d action)
-          (recur (dec n) (conj actions action)))
-        actions))))
+  "Generates an action and evals it until n actions or no possible actions,
+  calling (f action) at each step."
+  ([d n] (walk-n-steps! d n (fn [_] nil)))
+  ([d n f]
+   (loop [n n
+          actions []]
+     (if (zero? n)
+       actions
+       (if-let [action (first (find-actions d))]
+         (do
+           (eval! d action)
+           (f action)
+           (recur (dec n) (conj actions action)))
+         actions)))))
