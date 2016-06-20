@@ -2,6 +2,8 @@
   (:require [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
+            [osmium.user :as user]
+            [clojure.spec :as s]
             [clojure.set :as set]))
 
 (defmulti eval!* (fn [driver [type data]] type))
@@ -75,8 +77,24 @@
      (if (zero? n)
        actions
        (if-let [action (first (find-actions d))]
-         (do
-           (eval! d action)
-           (f action)
-           (recur (dec n) (conj actions action)))
+         (let [action' (expand-action d action)]
+           (eval! d action')
+           (f action')
+           (recur (dec n) (conj actions action')))
          actions)))))
+
+;; ======================================================================
+;; Tests
+
+(deftest users
+  (testing "All created users are valid"
+    (o/start!)
+    (let [driver (taxi/new-driver {:browser :firefox})
+          db (:db @o/system)]
+      (eval! driver [:to "localhost:3005"])
+      (walk-n-steps! driver 10
+                     (fn [a]
+                       (doseq [user (user/all-users db)]
+                         (is (s/valid? ::user/user user)))))
+      (taxi/quit driver))
+    (o/stop!)))

@@ -54,3 +54,11 @@
                      (not= (::password user) password) :pass-dont-match)]
       {:error error}
       user)))
+
+;; ======================================================================
+;; Testing Helpers
+
+(defn all-users [db]
+  (mapv (comp (partial by-id db) first)
+        (d/q '[:find ?u :in $ :where [?u ::email _]]
+             (d/db (:conn db)))))
