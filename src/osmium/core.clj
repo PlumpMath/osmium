@@ -41,7 +41,7 @@
    (POST "/login" {params :params}
      (let [user (user/login db (map-keys keyword params))]
        (if-let [error (:error user)]
-         (pr-str {:error error})
+         (web/error-page {:error error})
          (-> (response/redirect "/")
              (assoc-in [:session :user] user)))))
    (GET "/logout" _
@@ -51,14 +51,14 @@
    (POST "/signup" {params :params}
      (let [new-user (user/signup! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
-         (pr-str error)
+         (web/error-page error)
          (-> (format "/user/%s" (:user/email new-user))
              response/redirect
              (assoc :session {:user new-user})))))
    (POST "/update-pass" {params :params}
      (let [new-user (user/update-password! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
-         (pr-str error)
+         (web/error-page error)
          (response/redirect (format "/user/%s" (:user/email new-user))))))
    (GET "/book" {session :session}
      (if-not (web/logged-in? session)
@@ -69,7 +69,7 @@
        (response/status (response/response "Not authorized") 401)
        (let [new-book (book/new-book! db (map-keys (partial keyword "book") params))]
          (if-let [error (:error new-book)]
-           (pr-str error)
+           (web/error-page error)
            (response/redirect (format "/book/%s" (:db/id new-book)))))))
    (GET "/book/:id" {params :params session :session}
      (let [book (book/by-id db (Long. (:id params)))
