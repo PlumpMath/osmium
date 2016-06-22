@@ -1,5 +1,4 @@
 (ns osmium.core-test
-  (:import [clojure.test.check.generators Generator])
   (:require [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
@@ -94,8 +93,9 @@
        (if-let [action (rand-nth (seq (find-actions d)))]
          (let [action' (expand-action d action)]
            (eval! d action')
-           (f action')
-           (recur (dec n) (conj actions action')))
+           (if (= ::stop (f action'))
+             (conj actions action')
+             (recur (dec n) (conj actions action'))))
          actions)))))
 
 ;; ======================================================================
@@ -110,6 +110,13 @@
 
 (defonce replay (atom {:actions [] :step 0}))
 
+(defn error-page? [page-source]
+  (or (boolean (re-find #"error-page" page-source))
+      (boolean (re-find #"not-found" page-source))))
+
+(defn login-button-rendered? [page-source]
+  (boolean (re-find #"login" page-source)))
+
 (deftest users
   (testing "All created users are valid"
     (o/start!)
@@ -118,9 +125,14 @@
       (eval! driver [:to "localhost:3005"])
       (let [actions (walk-n-steps! driver 10
                                    (fn [a]
-                                     (println a)
                                      (doseq [user (user/all-users db)]
-                                       (is (s/valid? ::user/user user)))))]
+                                       (is (s/valid? ::user/user user)))
+                                     (let [source (taxi/page-source driver)
+                                           error-page? (error-page? source)]
+                                       (is (not error-page?))
+                                       (is (login-button-rendered? source))
+                                       (when error-page?
+                                         ::stop))))]
         (reset! replay {:actions actions :step 0}))
       (taxi/quit driver))
     (o/stop!)))
