@@ -10,6 +10,7 @@
             [ring.middleware.params :as params]
             [ring.middleware.edn :refer [wrap-edn-params]]
             [ring.middleware.session :as session]
+            [ring.middleware.session.memory :as memory-store]
             [ring.util.response :as response]
             [ring.adapter.jetty :as jetty]
             [compojure.core :refer :all]
@@ -19,7 +20,8 @@
             [osmium.db :as db]
             [osmium.book :as book]
             [osmium.web :as web]
-            [osmium.user :as user]))
+            [osmium.user :as user])
+  (:import [ring.middleware.session.memory MemoryStore]))
 
 ;;  ======================================================================
 ;; Routes
@@ -38,27 +40,27 @@
      (if (web/logged-in? session)
        (response/redirect "/")
        (web/log-in session)))
-   (POST "/login" {params :params}
+   (POST "/login" {params :params session :session}
      (let [user (user/login db (map-keys keyword params))]
        (if-let [error (:error user)]
-         (web/error-page {:error error})
+         (web/error-page session {:error error})
          (-> (response/redirect "/")
              (assoc-in [:session :user] user)))))
    (GET "/logout" _
      (-> (response/redirect "/")
          (assoc :session {})))
    (GET "/signup" {session :session} (web/sign-up session))
-   (POST "/signup" {params :params}
+   (POST "/signup" {params :params session :session}
      (let [new-user (user/signup! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
-         (web/error-page error)
+         (web/error-page session error)
          (-> (format "/user/%s" (:user/email new-user))
              response/redirect
              (assoc :session {:user new-user})))))
-   (POST "/update-pass" {params :params}
+   (POST "/update-pass" {params :params session :session}
      (let [new-user (user/update-password! db (map-keys keyword params))]
        (if-let [error (:error new-user)]
-         (web/error-page error)
+         (web/error-page session error)
          (response/redirect (format "/user/%s" (:user/email new-user))))))
    (GET "/book" {session :session}
      (if-not (web/logged-in? session)
@@ -69,7 +71,7 @@
        (response/status (response/response "Not authorized") 401)
        (let [new-book (book/new-book! db (map-keys (partial keyword "book") params))]
          (if-let [error (:error new-book)]
-           (web/error-page error)
+           (web/error-page session error)
            (response/redirect (format "/book/%s" (:db/id new-book)))))))
    (GET "/book/:id" {params :params session :session}
      (let [book (book/by-id db (Long. (:id params)))
@@ -100,14 +102,24 @@
       (handler req)
       (catch Exception e
         {:status 500
-         :body (web/error-page (:session req) nil)}))))
+         :body (web/error-page (:session req) (pr-str e))}))))
+
+(extend-type MemoryStore
+  component/Lifecycle
+  (start [c] c)
+  (stop [c]
+    (reset! (:session-map c) {})
+    c))
+
+(defn new-session-store []
+  (memory-store/memory-store (atom {})))
 
 ;; ======================================================================
 ;; Server
 
-(defn app-handler [db]
+(defn app-handler [session-store db]
   (-> (main-routes db)
-      session/wrap-session
+      (session/wrap-session {:store session-store})
       wrap-edn-params
       params/wrap-params
       wrap-exceptions))
@@ -115,11 +127,11 @@
 (defn start-jetty [handler port]
   (jetty/run-jetty handler {:port (Integer. port) :join? false}))
 
-(defrecord Server [db port jetty]
+(defrecord Server [session-store db port jetty]
   component/Lifecycle
   (start [component]
     (println "Start server at port:" port)
-    (assoc component :jetty (start-jetty (app-handler db) port)))
+    (assoc component :jetty (start-jetty (app-handler session-store db) port)))
   (stop [component]
     (println "Stop server")
     (when jetty
@@ -131,7 +143,8 @@
         uri (or db-uri "datomic:mem://localhost:4334/osmium")]
     (component/system-map
      :db (db/map->Datomic {:uri uri})
-     :server (component/using (map->Server {:port http-port}) [:db]))))
+     :session-store (new-session-store)
+     :server (component/using (map->Server {:port http-port}) [:db :session-store]))))
 
 (defonce system (atom (new-system {})))
 
