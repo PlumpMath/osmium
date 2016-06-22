@@ -122,9 +122,13 @@
   (and (or a b)
        (not (and a b))))
 
+(use-fixtures :each (fn [t]
+                      (o/start!)
+                      (t)
+                      (o/stop!)))
+
 (deftest users
   (testing "All created users are valid"
-    (o/start!)
     (let [driver (taxi/new-driver {:browser :firefox})
           db (:db @o/system)
           sessions (-> @o/system :session-store .session-map)]
@@ -140,8 +144,7 @@
                                          (is (xor (web/logged-in? session)
                                                   (login-button-rendered? source)))))))]
         (reset! replay {:actions actions :step 0}))
-      (taxi/quit driver))
-    (o/stop!)))
+      (taxi/quit driver))))
 
 (defn restart! []
   (swap! replay assoc :stop 0))
