@@ -88,7 +88,19 @@
        (let [description (get params "book/description")]
          (book/update-description! db (Long. (:id params)) description)
          (response/redirect (format "/book/%s" (:id params))))))
-   (route/resources "/")))
+   (route/resources "/")
+   (route/not-found web/not-found)))
+
+;; ======================================================================
+;; Middleware
+
+(defn wrap-exceptions [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Exception e
+        {:status 500
+         :body (web/error-page (:session req) nil)}))))
 
 ;; ======================================================================
 ;; Server
@@ -98,7 +110,7 @@
       session/wrap-session
       wrap-edn-params
       params/wrap-params
-      prone/wrap-exceptions))
+      wrap-exceptions))
 
 (defn start-jetty [handler port]
   (jetty/run-jetty handler {:port (Integer. port) :join? false}))

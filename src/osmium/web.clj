@@ -207,3 +207,23 @@
       [:label {:for "description"} "Description"]
       [:textarea (action-map :fill {:name "description"})]]
      [:button (action-map :click {:type "submit"}) "Create"]])))
+
+;; ======================================================================
+;; Error page
+
+(defn error-page [session error-msg]
+  (layout
+    session
+    (str "Osmium - Internal Error")
+    (html
+      [:h2.error-page "Internal Error"]
+      (when (some? error-msg)
+        [:p "Something unexpected has happened related to:" (str error-msg)])
+      [:p "We are sorry and if the erorr persists, please contact support@osmium.com"])))
+
+(def not-found
+  (layout
+    {}
+    (str "Osmium - Page Not Found")
+    [:h2.not-found "Page Not Found"]
+    [:p "We don't have the page you are looking for."]))
