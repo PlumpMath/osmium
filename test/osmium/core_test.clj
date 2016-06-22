@@ -3,6 +3,7 @@
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
             [osmium.user :as user]
+            [osmium.web :as web]
             [clojure.spec :as s]
             [clojure.spec.gen :as gen]
             [clojure.set :as set]
@@ -117,22 +118,27 @@
 (defn login-button-rendered? [page-source]
   (boolean (re-find #"login" page-source)))
 
+(defn xor [a b]
+  (and (or a b)
+       (not (and a b))))
+
 (deftest users
   (testing "All created users are valid"
     (o/start!)
     (let [driver (taxi/new-driver {:browser :firefox})
-          db (:db @o/system)]
+          db (:db @o/system)
+          sessions (-> @o/system :session-store .session-map)]
       (eval! driver [:to "localhost:3005"])
       (let [actions (walk-n-steps! driver 10
                                    (fn [a]
-                                     (doseq [user (user/all-users db)]
-                                       (is (s/valid? ::user/user user)))
-                                     (let [source (taxi/page-source driver)
-                                           error-page? (error-page? source)]
-                                       (is (not error-page?))
-                                       (is (login-button-rendered? source))
-                                       (when error-page?
-                                         ::stop))))]
+                                     (let [session (first (vals @sessions))]
+                                       (doseq [user (user/all-users db)]
+                                         (is (s/valid? ::user/user user)))
+                                       (let [source (taxi/page-source driver)
+                                             error-page? (error-page? source)]
+                                         (is (not error-page?))
+                                         (is (xor (web/logged-in? session)
+                                                  (login-button-rendered? source)))))))]
         (reset! replay {:actions actions :step 0}))
       (taxi/quit driver))
     (o/stop!)))

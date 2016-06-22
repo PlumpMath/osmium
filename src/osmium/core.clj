@@ -108,7 +108,7 @@
   component/Lifecycle
   (start [c] c)
   (stop [c]
-    (reset! (:session-map c) {})
+    (reset! (.session-map c) {})
     c))
 
 (defn new-session-store []
