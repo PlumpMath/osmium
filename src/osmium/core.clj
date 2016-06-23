@@ -31,11 +31,11 @@
    (GET "/" {session :session}
      (let [books (book/all db)]
        (web/index session books)))
-   (GET "/user/:email" req
-     (let [email (get-in req [:params :email])]
+   (GET "/user/:email" {session :session params :params}
+     (let [email (:email params)]
        (if-let [user (user/by-email db email)]
-         (web/user-view (:session req) user)
-         "user not found")))
+         (web/user-view session user)
+         (web/error-page session {:error "user not found"}))))
    (GET "/login" {session :session}
      (if (web/logged-in? session)
        (response/redirect "/")

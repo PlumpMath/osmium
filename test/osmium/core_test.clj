@@ -93,6 +93,9 @@
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
 
+(defmethod eval!* :wait [driver [_ milliseconds]]
+  (Thread/sleep milliseconds))
+
 ;; ======================================================================
 ;; API
 
@@ -224,3 +227,28 @@
       (swap! replay update :step inc)
       (restart!))
     next-action))
+
+;; ======================================================================
+;; Useful Snippets
+
+(comment
+  (def d (taxi/new-driver {:browser :firefox}))
+
+  ;; start the system
+  (o/start!)
+
+  (eval! d [:to "localhost:3005"])
+
+  (def actions (walk-n-steps! d 10 identity))
+
+  (def actions-for-recording (cons [:wait 1000] (interleave  actions (repeat [:wait 1000]))))
+
+  ;; clean the system after walk-n-steps!
+  (o/restart!)
+
+  ;; replay the actions from the random walk, waiting 1sec between each one
+  (eval! d [:to "localhost:3005"])
+
+  (eval! d actions-for-recording)
+
+  )
