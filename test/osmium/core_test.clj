@@ -1,5 +1,6 @@
 (ns osmium.core-test
   (:require [com.stuartsierra.component :as component]
+            [clojure.string :as str]
             [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
@@ -8,7 +9,11 @@
             [clojure.spec :as s]
             [clojure.spec.gen :as gen]
             [clojure.set :as set]
-            [clojure.test.check.generators :as test-gen ]))
+            [clojure.test.check.generators :as test-gen ]
+            [clj-webdriver.core :as wd]
+            [clojure.string :as str]))
+
+(declare eval!)
 
 (defmulti eval!* (fn [driver [type data]] type))
 
@@ -26,12 +31,31 @@
 (defmethod eval!* :to [driver [_ url]]
   (taxi/to driver url))
 
-;; Page Actions
+;; Helpers
 
 (defn expand-action [driver [_ id]]
   (let [id-sel (str "#" id)]
     (when-let [action (taxi/attribute driver id-sel "data-action")]
       [(keyword action) id-sel])))
+
+(defn- ele->id [ele]
+  (taxi/attribute ele "id"))
+
+(defn ele->action* [ele]
+  [:action (ele->id ele)])
+
+(defn ele->action [driver ele]
+  (expand-action driver [:action (ele->id ele)]))
+
+(defn find-actions [driver]
+  (->> (taxi/find-elements driver {:css ".osmium-action"})
+       (map ele->action*)
+       set))
+
+(defn possible-actions [driver]
+  (conj (find-actions driver) :back :forward :back))
+
+;; Page Actions
 
 (defmethod eval!* :action [driver [_ id]]
   (when-let [action (expand-action driver [:action id])]
@@ -43,6 +67,18 @@
 (defmethod eval!* :fill [driver [_ sel text]]
   (let [text (or text (gen/generate (s/gen string?)))]
     (taxi/input-text driver sel text)))
+
+(defn reset-form! [driver id]
+  (taxi/execute-script driver (format "document.getElementById('%s').reset();" id)))
+
+;; Meant for :form
+;; XXX: assumes that the the last html element submits the whole form
+;; XXX: assumes that the selector is #id
+(defmethod eval!* :submit [driver [_ sel]]
+  (let [action-children (taxi/find-elements driver {:css (str sel " .osmium-action")})
+        actions (mapv (partial ele->action driver) action-children)]
+    (reset-form! driver (str/replace sel #"#" ""))
+    (eval! driver actions)))
 
 ;; Spec
 
@@ -56,17 +92,6 @@
 
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
-
-(defn- ele->id [ele]
-  (taxi/attribute ele "id"))
-
-(defn find-actions [driver]
-  (->> (taxi/find-elements driver {:css ".osmium-action"})
-       (map (fn [ele] [:action (ele->id ele)]))
-       set))
-
-(defn possible-actions [driver]
-  (conj (find-actions driver) :back :forward :back))
 
 ;; ======================================================================
 ;; API
@@ -91,8 +116,8 @@
       (throw (Exception. (str "Couldn't find element for:" (pr-str x)))))))
 
 (defn walk-n-steps!
-  "Generates an action and evals it until n actions or no possible actions,
-  calling (f action) at each step."
+  "Finds the possible actions for the driver's current state, randomly picks one and evals it,
+  repeating the process n times, and calling (f action) at each step."
   ([d n] (walk-n-steps! d n (fn [_] nil)))
   ([d n f]
    (loop [n n
@@ -131,7 +156,7 @@
          ;; reproduce state up to here
          (eval! driver path)
          ;; find next level of actions
-         (let [actions (mapv (partial expand-action d) (find-actions driver))]
+         (let [actions (mapv (partial expand-action driver) (find-actions driver))]
            ;; stop the system and recur along all actions
            (component/stop system')
            (into [action]
@@ -140,7 +165,6 @@
            ;; if an exception is thrown and any Server object is left in started state,
            ;; the port is bind and we have no way to stop it, need to restart the repl
            (component/stop system')))))))
-
 
 ;; ======================================================================
 ;; Tests

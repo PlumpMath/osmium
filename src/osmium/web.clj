@@ -94,13 +94,15 @@
 
 (defn rating-icons-form [book-id]
   (html
-   [:form.rating {:action (format "/book/%s/rate" book-id) :method :post}
-    (for [i (range 5)]
-      [:span {}
-       [:input (action-map :click {:id (str "start-" i) :type "radio" :name "rating" :value i})
-        [:label {:for (str "start-" i)}
-         [:i {:class "fa fa-star"}]]]])
-    [:button (action-map :click {:class "rate" :type "submit"}) "Rate"]]))
+    [:form (action-map :submit {:class "rating"
+                                :action (format "/book/%s/rate" book-id)
+                                :method :post})
+     (for [i (range 5)]
+       [:span {}
+        [:input (action-map :click {:id (str "start-" i) :type "radio" :name "rating" :value i})
+         [:label {:for (str "start-" i)}
+          [:i {:class "fa fa-star"}]]]])
+     [:button (action-map :click {:class "rate" :type "submit"}) "Rate"]]))
 
 (defn book-view [session book {:keys [edit?]}]
   (layout
@@ -114,8 +116,8 @@
        (rating-icons-form (:db/id book))
        (rating-icons (:book/rating book)))
      (if edit?
-       [:form {:action (format "/book/%s/description" (:db/id book))
-               :method :post}
+       [:form (action-map :submit {:action (format "/book/%s/description" (:db/id book))
+                                   :method :post})
         [:textarea {:name "book/description"}
          (:book/description book)]
         [:br]
@@ -138,7 +140,7 @@
    (str "Osmium - Log in")
    (html
     [:h1 {} "Log in"]
-    [:form {:action "/login" :method :post}
+    [:form (action-map :submit {:action "/login" :method :post})
      [:span
       [:label {:for "email"} "Email"]
       [:input (action-map ::user/email {:name "email" :type "email"})]]
@@ -154,7 +156,7 @@
    (str "Osmium - Sign up")
    (html
     [:h2 {} "Sign up"]
-    [:form {:action "/signup" :method :post}
+    [:form (action-map :submit {:action "/signup" :method :post})
      [:span
       [:label {:for "email"} "Email"]
       [:input (action-map ::user/email {:id "email" :name "email" :type "email"})]]
@@ -179,8 +181,8 @@
    (html
     [:p {} (::user/email user)]
     [:h4 {} "Change your password"]
-    [:form {:action "/update-pass" :method :post}
-     [:input (action-map ::user/email {:name "email" :type "hidden" :value (::user/email user)})]
+    [:form (action-map :submit {:action "/update-pass" :method :post})
+     [:input {:name "email" :type "hidden" :value (::user/email user)}]
      [:span
       [:label {:for "old-pass"} "Old Password"]
       [:input (action-map ::user/password {:name "old-pass" :type "password"})]]
@@ -199,7 +201,7 @@
    (str "Osmium - New Book")
    (html
     [:h2 "New Book"]
-    [:form {:action "/book" :method :post}
+    [:form (action-map :submit {:action "/book" :method :post})
      (input "title" "Title")
      (input "author" "Author")
      (input "iban" "IBAN")

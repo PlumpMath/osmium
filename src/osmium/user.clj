@@ -10,8 +10,9 @@
 
 (s/def :db/id (s/and number? pos?))
 (s/def ::email (s/with-gen (s/and string? (partial re-matches email-regex))
-                 #(s/gen #{"jorge@borges.com" "eb@whitehead.com" "s@s.com"})))
-(s/def ::password (s/and string? #(< 6 (count %))))
+                 #(s/gen #{"eb@whitehead.com" "s@s.com"})))
+(s/def ::password (s/with-gen (s/and string? #(< 6 (count %)))
+                    #(s/gen #{"password" "bad"})))
 
 (s/def ::user (s/keys :req [:db/id ::email ::password]))
 
