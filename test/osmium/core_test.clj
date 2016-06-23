@@ -205,6 +205,7 @@
       (eval! driver [:to "localhost:3005"])
       (let [actions (walk-n-steps! driver 10
                                    (fn [a]
+                                     ;; this fn is called after each action
                                      (let [session (first (vals @sessions))]
                                        (doseq [user (user/all-users db)]
                                          (is (s/valid? ::user/user user)))
@@ -254,4 +255,14 @@
   ;; create a tree
   (def tree (make-tree 3 (o/new-system nil) d))
 
-  )
+  ;; Run the tests (currently failing)
+  (run-tests)
+
+  ;; The results from the test are stored in replay
+  ;; After running the test, step! should go through the actions
+
+  (o/start!)
+  (step!)
+
+  (:actions @replay)
+)
