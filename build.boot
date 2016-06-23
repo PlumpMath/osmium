@@ -2,7 +2,7 @@
 (def version "0.1.0-SNAPSHOT")
 
 (set-env!
- :source-paths    #{"resources" "src"}
+ :source-paths    #{"resources" "src" "test"}
  :resource-paths  #{"resources"}
  :dependencies '[
                  ;; Server
@@ -17,6 +17,7 @@
                  ;; Testing
                  [prone "1.1.1"]
                  [org.clojure/test.check "0.9.0"]
+                 [adzerk/boot-test "1.1.1" :scope "test"]
                  [clj-webdriver "0.7.2"
                   :exclusions [commons-logging commons-codec org.apache.httpcomponents/httpclient]]
                  [org.seleniumhq.selenium/selenium-htmlunit-driver "2.52.0"
@@ -38,6 +39,8 @@
                     "http://www.eclipse.org/legal/epl-v10.html"}}
  jar {:main        'osmium.core
       :file        (str "osmium-" version "-standalone.jar")})
+
+(require '[adzerk.boot-test :refer :all])
 
 (deftask build
   "Build the project locally as a JAR."

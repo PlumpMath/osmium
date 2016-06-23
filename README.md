@@ -8,7 +8,9 @@ Download from http://example.com/FIXME.
 
 ## Usage
 
-FIXME: explanation
+Start a repl
+
+    $ boot repl
 
 Run the project directly:
 
