@@ -146,14 +146,14 @@
   - path all previous steps necessary to reproduce the state, (for root call = [])
   - action: root action, ex. [:to 'localhost:30005']"
   ([depth system driver]
-   (make-tree depth system driver [] [:to "localhost:3005"]))
-  ([depth system driver action]
-   (make-tree depth system driver [] action))
+   (make-tree depth system driver [[:to "localhost:3005"]]))
+  ([depth system driver path]
+   (make-tree depth system driver path (first path)))
   ([depth system driver path action]
    ;; base case returns whatever root action was passed in
    (if (zero? depth)
      action
-     ;; start the system from scratch
+     ;; start the system from scr
      (let [system' (component/start system)]
        (try
          ;; reproduce state up to here
@@ -250,5 +250,8 @@
   (eval! d [:to "localhost:3005"])
 
   (eval! d actions-for-recording)
+
+  ;; create a tree
+  (def tree (make-tree 3 (o/new-system nil) d))
 
   )
