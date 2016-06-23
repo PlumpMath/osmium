@@ -1,5 +1,6 @@
 (ns osmium.core-test
-  (:require [clojure.test :refer :all]
+  (:require [com.stuartsierra.component :as component]
+            [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
             [osmium.user :as user]
@@ -8,7 +9,6 @@
             [clojure.spec.gen :as gen]
             [clojure.set :as set]
             [clojure.test.check.generators :as test-gen ]))
-
 
 (defmulti eval!* (fn [driver [type data]] type))
 
@@ -73,14 +73,22 @@
 
 (defmulti eval! (fn [driver xs] (type (first xs))))
 
+(defmethod eval! nil [_ _])
+
 (defmethod eval! clojure.lang.PersistentVector
   [driver xs]
   (doseq [x xs]
     (eval! driver x)))
 
+(defonce last-exception (atom nil))
+
 (defmethod eval! clojure.lang.Keyword
   [driver x]
-  (eval!* driver x))
+  (try
+    (eval!* driver x)
+    (catch org.openqa.selenium.NoSuchElementException e
+      (reset! last-exception e)
+      (throw (Exception. (str "Couldn't find element for:" (pr-str x)))))))
 
 (defn walk-n-steps!
   "Generates an action and evals it until n actions or no possible actions,
@@ -98,6 +106,41 @@
              (conj actions action')
              (recur (dec n) (conj actions action'))))
          actions)))))
+
+(defn make-tree
+  "Generates a tree [action1-depth1 [[action1-depth-2 tree] [action2-depth2 tree]]]
+  by walking all the possible paths from root to leaf node. It restarts the system on each run,
+  reproduces the state by evaling path, finds the next level of actions, and recurs on all
+  of them.
+  - depth: of the tree
+  - system: system object to be restarted on each run
+  - driver: selenium driver object to use
+  - path all previous steps necessary to reproduce the state, (for root call = [])
+  - action: root action, ex. [:to 'localhost:30005']"
+  ([depth system driver]
+   (make-tree depth system driver [] [:to "localhost:3005"]))
+  ([depth system driver action]
+   (make-tree depth system driver [] action))
+  ([depth system driver path action]
+   ;; base case returns whatever root action was passed in
+   (if (zero? depth)
+     action
+     ;; start the system from scratch
+     (let [system' (component/start system)]
+       (try
+         ;; reproduce state up to here
+         (eval! driver path)
+         ;; find next level of actions
+         (let [actions (mapv (partial expand-action d) (find-actions driver))]
+           ;; stop the system and recur along all actions
+           (component/stop system')
+           (into [action]
+                 (mapv #(make-tree (dec depth) system driver (conj path %) %) actions)))
+         (finally
+           ;; if an exception is thrown and any Server object is left in started state,
+           ;; the port is bind and we have no way to stop it, need to restart the repl
+           (component/stop system')))))))
+
 
 ;; ======================================================================
 ;; Tests
