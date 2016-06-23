@@ -5,14 +5,16 @@
             [osmium.book :as book]
             [osmium.user :as user]))
 
-(defn- uuid-id []
-  (str "osmium-" (random-uuid)))
+(def generator (atom 0))
+
+(defn- guid-id []
+  (str "osmium-" (swap! generator inc)))
 
 (defn kw->str [k]
   (str (.-sym k)))
 
 (defmacro action-map [action-type m]
-  (let [action-id (uuid-id)]
+  (let [action-id (guid-id)]
     `(cond-> (-> ~m
                  (update :class (partial str "osmium-action "))
                  (assoc :data-action ~(kw->str action-type)))
