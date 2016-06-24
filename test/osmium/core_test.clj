@@ -170,6 +170,29 @@
            ;; the port is bind and we have no way to stop it, need to restart the repl
            (component/stop system')))))))
 
+(defn make-tree*
+  ([depth driver-fn]
+   (make-tree* depth driver-fn [[:to "localhost:3005"]]))
+  ([depth driver-fn path]
+   (make-tree* depth driver-fn path (first path)))
+  ([depth driver-fn path action]
+   ;; base case returns whatever root action was passed in
+   (if (zero? depth)
+     action
+     ;; start the system from scr
+     (let [driver (driver-fn)]
+       (try
+         ;; reproduce state up to here
+         (eval! driver path)
+         ;; find next level of actions
+         (let [actions (mapv (partial expand-action driver) (find-actions driver))]
+           ;; stop the system and recur along all actions
+           (taxi/quit driver)
+           (into [action]
+                 (pmap #(make-tree* (dec depth) driver-fn (conj path %) %) actions)))
+         (finally
+           (taxi/quit driver)))))))
+
 ;; ======================================================================
 ;; Tests
 
