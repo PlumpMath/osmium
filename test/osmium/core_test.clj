@@ -4,6 +4,7 @@
             [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
+            [osmium.sauce-labs :as sl]
             [osmium.user :as user]
             [osmium.web :as web]
             [clojure.spec :as s]
@@ -234,6 +235,8 @@
 
 (comment
   (def d (taxi/new-driver {:browser :firefox}))
+
+  (def d (sl/new-sauce-labs-browser))
 
   ;; start the system
   (o/start!)
