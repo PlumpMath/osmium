@@ -65,9 +65,17 @@
 (defmethod eval!* :click [driver [_ sel]]
   (taxi/click driver sel))
 
-(defmethod eval!* :fill [driver [_ sel text]]
-  (let [text (or text (gen/generate (s/gen string?)))]
+(defmethod eval!* :input [driver [_ sel text]]
+  (let [text (str (or text (gen/generate (s/gen string?))))]
     (taxi/input-text driver sel text)))
+
+(defmethod eval!* :fill [driver [_ mappings entity]]
+  (eval! d (->> mappings
+                (map (fn [[k q]]
+                       (when-let [v (get entity k)]
+                         [:input q v])))
+                (remove nil?)
+                vec)))
 
 (defn reset-form! [driver id]
   (taxi/execute-script driver (format "document.getElementById('%s').reset();" id)))
@@ -89,7 +97,7 @@
 (defmethod eval!* :default [driver [k sel]]
   (assert (spec-keyword? k) (str k " is not a spec keyword"))
   (let [val (gen/generate (s/gen k))]
-    (eval!* driver [:fill sel (str val)])))
+    (eval!* driver [:input sel (str val)])))
 
 ;; TODO: select options
 ;; TODO: wait (not necessary for a performance demo!)
