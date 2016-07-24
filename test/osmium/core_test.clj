@@ -4,6 +4,7 @@
             [clojure.test :refer :all]
             [clj-webdriver.taxi :as taxi]
             [osmium.core :as o]
+            [osmium.eval :as eval]
             [osmium.sauce-labs :as sl]
             [osmium.user :as user]
             [osmium.web :as web]
@@ -14,135 +15,8 @@
             [clj-webdriver.core :as wd]
             [clojure.string :as str]))
 
-(declare eval!)
-
-(defmulti eval!* (fn [driver [type data]] type))
-
-;; Navigation
-
-(defmethod eval!* :refresh [driver _]
-  (taxi/refresh driver))
-
-(defmethod eval!* :back [driver _]
-  (taxi/back driver))
-
-(defmethod eval!* :forward [driver _]
-  (taxi/forward driver))
-
-(defmethod eval!* :to [driver [_ url]]
-  (taxi/to driver url))
-
-;; Helpers
-
-(defn expand-action [driver [_ id]]
-  (let [id-sel (str "#" id)]
-    (when-let [action (taxi/attribute driver id-sel "data-action")]
-      [(keyword action) id-sel])))
-
-(defn- ele->id [ele]
-  (taxi/attribute ele "id"))
-
-(defn ele->action* [ele]
-  [:action (ele->id ele)])
-
-(defn ele->action [driver ele]
-  (expand-action driver [:action (ele->id ele)]))
-
-(defn find-actions [driver]
-  (->> (taxi/find-elements driver {:css ".osmium-action"})
-       (map ele->action*)
-       set))
-
-(defn possible-actions [driver]
-  (conj (find-actions driver) :back :forward :back))
-
-;; Page Actions
-
-(defmethod eval!* :action [driver [_ id]]
-  (when-let [action (expand-action driver [:action id])]
-    (eval!* driver action)))
-
-(defmethod eval!* :click [driver [_ sel]]
-  (taxi/click driver sel))
-
-(defmethod eval!* :input [driver [_ sel text]]
-  (let [text (str (or text (gen/generate (s/gen string?))))]
-    (taxi/input-text driver sel text)))
-
-(defmethod eval!* :fill [driver [_ mappings entity]]
-  (eval! d (->> mappings
-                (map (fn [[k q]]
-                       (when-let [v (get entity k)]
-                         [:input q v])))
-                (remove nil?)
-                vec)))
-
-(defn reset-form! [driver id]
-  (taxi/execute-script driver (format "document.getElementById('%s').reset();" id)))
-
-;; Meant for :form
-;; XXX: assumes that the the last html element submits the whole form
-;; XXX: assumes that the selector is #id
-(defmethod eval!* :submit [driver [_ sel]]
-  (let [action-children (taxi/find-elements driver {:css (str sel " .osmium-action")})
-        actions (mapv (partial ele->action driver) action-children)]
-    (reset-form! driver (str/replace sel #"#" ""))
-    (eval! driver actions)))
-
-;; Spec
-
-(defn- spec-keyword? [k]
-  (contains? (s/registry) k))
-
-(defmethod eval!* :default [driver [k sel]]
-  (assert (spec-keyword? k) (str k " is not a spec keyword"))
-  (let [val (gen/generate (s/gen k))]
-    (eval!* driver [:input sel (str val)])))
-
-;; TODO: select options
-;; TODO: wait (not necessary for a performance demo!)
-
-(defmethod eval!* :wait [driver [_ milliseconds]]
-  (Thread/sleep milliseconds))
-
 ;; ======================================================================
 ;; API
-
-(defmulti eval! (fn [driver xs] (type (first xs))))
-
-(defmethod eval! nil [_ _])
-
-(defmethod eval! clojure.lang.PersistentVector
-  [driver xs]
-  (doseq [x xs]
-    (eval! driver x)))
-
-(defonce last-exception (atom nil))
-
-(defmethod eval! clojure.lang.Keyword
-  [driver x]
-  (try
-    (eval!* driver x)
-    (catch org.openqa.selenium.NoSuchElementException e
-      (reset! last-exception e)
-      (throw (Exception. (str "Couldn't find element for:" (pr-str x)))))))
-
-(defn walk-n-steps!
-  "Finds the possible actions for the driver's current state, randomly picks one and evals it,
-  repeating the process n times, and calling (f action) at each step."
-  ([d n] (walk-n-steps! d n (fn [_] nil)))
-  ([d n f]
-   (loop [n n
-          actions []]
-     (if (zero? n)
-       actions
-       (if-let [action (rand-nth (seq (find-actions d)))]
-         (let [action' (expand-action d action)]
-           (eval! d action')
-           (if (= ::stop (f action'))
-             (conj actions action')
-             (recur (dec n) (conj actions action'))))
-         actions)))))
 
 (defn make-tree
   "Generates a tree [action1-depth1 [[action1-depth-2 tree] [action2-depth2 tree]]]
@@ -166,7 +40,7 @@
      (let [system' (component/start system)]
        (try
          ;; reproduce state up to here
-         (eval! driver path)
+         (eval/eval! driver path)
          ;; find next level of actions
          (let [actions (mapv (partial expand-action driver) (find-actions driver))]
            ;; stop the system and recur along all actions
@@ -191,7 +65,7 @@
      (let [driver (driver-fn)]
        (try
          ;; reproduce state up to here
-         (eval! driver path)
+         (eval/eval! driver path)
          ;; find next level of actions
          (let [actions (mapv (partial expand-action driver) (find-actions driver))]
            ;; stop the system and recur along all actions
@@ -234,7 +108,7 @@
     (let [driver (taxi/new-driver {:browser :firefox})
           db (:db @o/system)
           sessions (-> @o/system :session-store .session-map)]
-      (eval! driver [:to "localhost:3005"])
+      (eval/eval! driver [:to "localhost:3005"])
       (let [actions (walk-n-steps! driver 10
                                    (fn [a]
                                      ;; this fn is called after each action
@@ -255,7 +129,7 @@
 (defn step! []
   (let [{:keys [actions step]} @replay
         next-action (nth actions step)]
-    (eval! @replay-driver next-action)
+    (eval/eval! @replay-driver next-action)
     (if (< step (dec (count actions)))
       (swap! replay update :step inc)
       (restart!))
@@ -272,7 +146,7 @@
   ;; start the system
   (o/start!)
 
-  (eval! d [:to "localhost:3005"])
+  (eval/eval! d [:to "localhost:3005"])
 
   (def actions (walk-n-steps! d 10 identity))
 
@@ -282,9 +156,9 @@
   (o/restart!)
 
   ;; replay the actions from the random walk, waiting 1sec between each one
-  (eval! d [:to "localhost:3005"])
+  (eval/eval! d [:to "localhost:3005"])
 
-  (eval! d actions-for-recording)
+  (eval/eval! d actions-for-recording)
 
   ;; create a tree
   (def tree (make-tree 3 (o/new-system nil) d))
