@@ -18,6 +18,7 @@
                  [prone "1.1.1"]
                  [org.clojure/test.check "0.9.0"]
                  [adzerk/boot-test "1.1.1" :scope "test"]
+                 [com.pojosontheweb/monte-repack "1.0"]
                  [clj-webdriver "0.7.2"
                   :exclusions [commons-logging commons-codec org.apache.httpcomponents/httpclient]]
                  [org.seleniumhq.selenium/selenium-htmlunit-driver "2.52.0"

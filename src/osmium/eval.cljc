@@ -56,11 +56,20 @@
 (defmethod eval!* :input [driver [_ sel text]]
   (taxi/input-text driver sel (str text)))
 
+(defmethod eval!* :select [driver [_ sel val]]
+  (taxi/select-option driver sel val))
+
 (defmethod eval!* :fill [driver [_ mappings entity]]
   (eval! driver (->> mappings
                      (map (fn [[k q]]
-                            (when-let [v (get entity k)]
-                              [:input q v])))
+                            (when-let [v (if (vector? k)
+                                           (get-in entity k)
+                                           (get entity k))]
+                              (if (map? q)
+                                (do
+                                  (assert (contains? q :value))
+                                  [:select (:value q) {:value (str v)}])
+                                [:input q v]))))
                      (remove nil?)
                      vec)))
 

@@ -2,7 +2,7 @@
 
 (import '[org.openqa.selenium.remote RemoteWebDriver])
 
-(extend-type RemoteWebDriver
+(extend-type ChromeDriver
 
   ;; Basic Functions
   IDriver
