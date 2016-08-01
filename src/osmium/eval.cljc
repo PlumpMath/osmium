@@ -97,6 +97,12 @@
 (defmethod eval!* :wait [driver [_ milliseconds]]
   (Thread/sleep milliseconds))
 
+(defmethod eval!* :wait-for [driver [_ q timeout interval]]
+  (taxi/wait-until driver
+                   (fn [_] (taxi/exists? driver {:css q}))
+                   (or timeout 5000)
+                   (or interval 500)))
+
 (declare expand)
 
 (defmulti eval! (fn [driver xs] (type (first xs))))
