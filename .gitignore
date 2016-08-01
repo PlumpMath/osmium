@@ -11,3 +11,5 @@ pom.xml.asc
 .hgignore
 .hg/
 *secrets.edn
+/resources/user-data-dir
+/src/osmium/recoder.clj

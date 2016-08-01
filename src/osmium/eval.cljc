@@ -53,25 +53,21 @@
 (defmethod eval!* :click [driver [_ sel]]
   (taxi/click driver sel))
 
+(defmethod eval!* :change [driver [_ sel text]]
+  (.executeScript driver
+                  (format
+                    "var ele = document.querySelector('%s').value = '%s';"
+                    sel text)
+                  (into-array [])))
+
+(defmethod eval!* :keys [driver [_ sel text]]
+  (taxi/send-keys driver sel (str text)))
+
 (defmethod eval!* :input [driver [_ sel text]]
   (taxi/input-text driver sel (str text)))
 
 (defmethod eval!* :select [driver [_ sel val]]
   (taxi/select-option driver sel val))
-
-(defmethod eval!* :fill [driver [_ mappings entity]]
-  (eval! driver (->> mappings
-                     (map (fn [[k q]]
-                            (when-let [v (if (vector? k)
-                                           (get-in entity k)
-                                           (get entity k))]
-                              (if (map? q)
-                                (do
-                                  (assert (contains? q :value))
-                                  [:select (:value q) {:value (str v)}])
-                                [:input q v]))))
-                     (remove nil?)
-                     vec)))
 
 (defn reset-form! [driver id]
   (taxi/execute-script driver (format "document.getElementById('%s').reset();" id)))
@@ -101,24 +97,47 @@
 (defmethod eval!* :wait [driver [_ milliseconds]]
   (Thread/sleep milliseconds))
 
+(declare expand)
+
 (defmulti eval! (fn [driver xs] (type (first xs))))
 
 (defmethod eval! nil [_ _])
 
 (defmethod eval! clojure.lang.PersistentVector
   [driver xs]
-  (doseq [x xs]
-    (eval! driver x)))
+  (doseq [x (mapcat expand xs)]
+    (eval!* driver x)))
 
 (defonce last-exception (atom nil))
 
 (defmethod eval! clojure.lang.Keyword
   [driver x]
   (try
-    (eval!* driver x)
+    (eval! driver (expand x))
     (catch org.openqa.selenium.NoSuchElementException e
       (reset! last-exception e)
       (throw (Exception. (str "Couldn't find element for:" (pr-str x)))))))
+
+;; ======================================================================
+;; Expand
+
+(defmulti expand (fn [[action _]] action))
+
+(defmethod expand :default [x] [x])
+
+(defmethod expand :fill [[_ mappings entity]]
+  (->> mappings
+       (mapcat (fn [[k q]]
+                 (when-let [v (if (vector? k)
+                                (get-in entity k)
+                                (get entity k))]
+                   (if (map? q)
+                     (do
+                       (assert (contains? q :value))
+                       [[:click (:value q)] [:select (:value q) {:value (str v)}]])
+                     [[:click q] [:input q v]]))))
+       (remove nil?)
+       vec))
 
 (defn walk-n-steps!
   "Finds the possible actions for the driver's current state, randomly picks one and evals it,
