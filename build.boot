@@ -4,6 +4,7 @@
 (set-env!
  :source-paths    #{"resources" "src" "test"}
  :resource-paths  #{"resources"}
+ :target-path     "target"
  :dependencies '[
                  ;; Server
                  [medley "0.8.2"]
@@ -39,7 +40,8 @@
       :license     {"Eclipse Public License"
                     "http://www.eclipse.org/legal/epl-v10.html"}}
  jar {:main        'osmium.core
-      :file        (str "osmium-" version "-standalone.jar")})
+      :file        (str "osmium-" version "-standalone.jar")}
+ push {:repo "clojars"})
 
 (require '[adzerk.boot-test :refer :all])
 
