@@ -1,8 +1,33 @@
 (in-ns 'clj-webdriver.core)
 
-(import '[org.openqa.selenium.remote RemoteWebDriver])
+(import '[org.openqa.selenium.remote RemoteWebDriver]
+        '[org.openqa.selenium.support.ui ExpectedCondition WebDriverWait]
+        '[java.util.concurrent TimeUnit])
+
+(require '[clj-webdriver.wait :as wait])
 
 (extend-type ChromeDriver
+
+  wait/IWait
+  (implicit-wait [driver timeout]
+    (.implicitlyWait (.. driver manage timeouts) timeout TimeUnit/MILLISECONDS)
+    driver)
+
+  (wait-until
+    ([driver pred] (wait/wait-until driver pred 5000 0))
+    ([driver pred timeout] (wait/wait-until driver pred timeout 0))
+    ([driver pred timeout interval]
+     (let [wait (WebDriverWait. driver (/ timeout 1000) interval)]
+       (.until wait (proxy [ExpectedCondition] []
+                      (apply [d] (let [result (pred (init-driver {:webdriver d}))]
+                                   ;; This allows us to wrap zero-arity functions
+                                   ;; in a single-arity function, so we don't need
+                                   ;; to write a macro or different function.
+                                   ;; (Taxi API support)
+                                   (if (fn? result)
+                                     (result)
+                                     result)))))
+       driver)))
 
   ;; Basic Functions
   IDriver
