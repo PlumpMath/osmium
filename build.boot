@@ -5,28 +5,13 @@
  :source-paths    #{"resources" "src" "test"}
  :resource-paths  #{"resources"}
  :target-path     "target"
- :dependencies '[
-                 ;; Server
-                 [medley "0.8.2"]
-                 [com.stuartsierra/component "0.2.3"]
-                 [ring "1.3.2"]
-                 [fogus/ring-edn "0.3.0"]
-                 [compojure "1.4.0"]
-                 [clj-http "1.1.0"]
-                 [hiccup "1.0.5"]
-                 [com.datomic/datomic-free "0.9.5372"]
-                 ;; Testing
-                 [prone "1.1.1"]
-                 [org.clojure/test.check "0.9.0"]
-                 [adzerk/boot-test "1.1.1" :scope "test"]
-                 [com.pojosontheweb/monte-repack "1.0"]
-                 [clj-webdriver "0.7.2"
-                  :exclusions [commons-logging commons-codec org.apache.httpcomponents/httpclient]]
+ :dependencies '[[com.pojosontheweb/monte-repack "1.0"]
+                 [clj-webdriver "0.7.2"]
                  [org.seleniumhq.selenium/selenium-htmlunit-driver "2.52.0"
-                  :exclusions [org.eclipse.jetty/jetty-util org.eclipse.jetty/jetty-io com.google.guava/guava commons-logging commons-codec org.apache.httpcomponents/httpclient]]
+                  :exclusions [org.eclipse.jetty/jetty-util org.eclipse.jetty/jetty-io]]
                  [org.seleniumhq.selenium/selenium-java "2.53.0"
                   :exclusions
-                  [org.seleniumhq.selenium/selenium-api org.eclipse.jetty/jetty-io com.google.guava/guava org.seleniumhq.selenium/selenium-support commons-codec org.apache.httpcomponents/httpclient org.seleniumhq.selenium/selenium-remote-driver commons-codec org.apache.httpcomponents/httpclient]]])
+                  [org.seleniumhq.selenium/selenium-api org.eclipse.jetty/jetty-io org.seleniumhq.selenium/selenium-support org.seleniumhq.selenium/selenium-remote-driver]]])
 
 (load-data-readers!)
 
@@ -42,8 +27,6 @@
  jar {:main        'osmium.core
       :file        (str "osmium-" version "-standalone.jar")}
  push {:repo "clojars"})
-
-(require '[adzerk.boot-test :refer :all])
 
 (deftask build
   "Build the project locally as a JAR."

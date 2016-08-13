@@ -8,11 +8,8 @@
 
 (def secrets (edn/read-string (slurp (io/resource "config/secrets.edn"))))
 
-(defn new-sauce-labs-browser []
-  ;; TODO: Change this to pg-eng, move key to secure location (out of source), and cycle
-  (let [username (get-in secrets [:sauce-labs :username])
-        key      (get-in secrets [:sauce-labs :key])
-        url      (format "http://%s:%s@ondemand.saucelabs.com:80/wd/hub" username key)
+(defn new-sauce-labs-browser [username key]
+  (let [url      (format "http://%s:%s@ondemand.saucelabs.com:80/wd/hub" username key)
         caps     (org.openqa.selenium.remote.DesiredCapabilities/firefox)
         webdriver   (org.openqa.selenium.remote.RemoteWebDriver. (java.net.URL. url) caps)]
     (clj-driver/init-driver webdriver)))
