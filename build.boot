@@ -3,7 +3,7 @@
 
 (set-env!
  :source-paths    #{"resources" "src" "test"}
- :resource-paths  #{"resources"}
+ :resource-paths  #{"resources" "src"}
  :target-path     "target"
  :dependencies '[[com.pojosontheweb/monte-repack "1.0"]
                  [clj-webdriver "0.7.2"]

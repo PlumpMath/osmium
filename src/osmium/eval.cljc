@@ -99,7 +99,7 @@
 
 (defmethod eval!* :wait-for [driver [_ q timeout interval]]
   (taxi/wait-until driver
-                   (fn [_] (taxi/exists? driver {:css q}))
+                   (fn [_] (taxi/visible? driver {:css q}))
                    (or timeout 5000)
                    (or interval 500)))
 
